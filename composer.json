@@ -1,0 +1,42 @@
+{
+  "name": "hyperf-plus/route",
+  "description": "route",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "毛自豪",
+      "email": "4213509@qq.com"
+    }
+  ],
+  "homepage": "https://github.com/lphkxd/hyperf-route",
+  "keywords": [
+    "hyperf",
+    "Admin",
+    "Vue"
+  ],
+  "require": {
+    "php": ">=7.3",
+    "ext-swoole": ">=4.5",
+    "mzh/hyperf-helper": "^0.1.7"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "HPlus\\Route\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Mzh\\Admin\\Tests\\": "tests"
+    }
+  },
+  "extra": {
+    "hyperf": {
+      "config": [
+        "HPlus\\Route\\ConfigProvider"
+      ]
+    }
+  }
+}
