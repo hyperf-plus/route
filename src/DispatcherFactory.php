@@ -31,7 +31,10 @@ class DispatcherFactory extends Dispatcher
         if ($annotation->prefix != '' && $annotation->prefix[0] !== '/') {
             $annotation->prefix = '/' . $annotation->prefix;
         }
-        $prefix = $this->getPrefix($className, $prefix . $annotation->prefix);
+        $prefix = $prefix . $this->getPrefix($className, $annotation->prefix);
+        if ($prefix[0] !== '/') {
+            $prefix = '/' . $prefix;
+        }
         $router = $this->getRouter($annotation->server);
         foreach ($methods as $methodName => $method) {
             $methodMiddlewares = $middlewares;
