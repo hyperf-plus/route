@@ -32,9 +32,6 @@ class DispatcherFactory extends Dispatcher
             $annotation->prefix = '/' . $annotation->prefix;
         }
         $prefix = $prefix . $this->getPrefix($className, $annotation->prefix);
-        if ($prefix[0] !== '/') {
-            $prefix = '/' . $prefix;
-        }
         $router = $this->getRouter($annotation->server);
         foreach ($methods as $methodName => $method) {
             $methodMiddlewares = $middlewares;
@@ -63,6 +60,9 @@ class DispatcherFactory extends Dispatcher
                     continue;
                 }
                 $path = str_replace('/_self_path', '', $path);
+                if (substr($path, 0, 1) !== '/') {
+                    $path = '/' . $path;
+                }
                 $router->addRoute($mapping->methods, $path, [$className, $methodName], [
                     'middleware' => $methodMiddlewares,
                 ]);
