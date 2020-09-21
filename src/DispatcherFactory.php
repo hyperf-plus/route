@@ -80,7 +80,10 @@ class DispatcherFactory extends Dispatcher
             if (isset($metadata['_c'][AdminController::class])) {
                 $middlewares = $this->handleMiddleware($metadata['_c']);
                 $prefix = config('admin.route.prefix', '');
-                $middlewares = array_merge($middlewares, config('admin.route.middleware', []));
+                foreach (config('admin.route.middleware', []) as $middleware) {
+                    if (!class_exists($middleware)) continue;
+                    $middlewares = array_merge($middlewares, [$middleware]);
+                }
                 $this->handleController($className, $metadata['_c'][AdminController::class], $metadata['_m'] ?? [], $middlewares, $prefix);
             }
             if (isset($metadata['_c'][AutoController::class])) {
