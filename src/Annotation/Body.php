@@ -12,8 +12,6 @@ class Body extends Param
     public $in = 'body';
     public $name = 'body';
     public $rules = [];
-    public $scene = '';
-    public $validate = '';
     public $description = 'body';
     public $security = true;
 
