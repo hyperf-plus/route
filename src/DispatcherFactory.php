@@ -36,11 +36,11 @@ class DispatcherFactory extends Dispatcher
         foreach ($methods as $methodName => $method) {
             $methodMiddlewares = $middlewares;
             // Handle method level middlewares.
+            $methodName = $method->getName();
             if (isset($methodMetadata[$methodName])) {
                 $methodMiddlewares = array_merge($methodMiddlewares, $this->handleMiddleware($methodMetadata[$methodName]));
                 $methodMiddlewares = array_unique($methodMiddlewares);
             }
-            $methodName = $method->getName();
             if (substr($methodName, 0, 2) === '__') {
                 continue;
             }
