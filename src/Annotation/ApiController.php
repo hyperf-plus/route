@@ -15,6 +15,12 @@ class ApiController extends Controller
 
     public $generate = [];
 
+        /**
+     * 所属服务 预留，后面做微服务时用
+     * @var null|string
+     */
+    public $service = '';
+    
     public $tag;
     /**
      * @var null|string
