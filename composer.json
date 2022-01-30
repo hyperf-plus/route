@@ -15,9 +15,11 @@
     "Vue"
   ],
   "require": {
-    "php": ">=7.3",
-    "ext-swoole": ">=4.5",
-    "hyperf/framework": "^2.0.0"
+    "php": ">=7.3"
+  },
+  "suggest": {
+    "ext-swoole": "Allows using @Value annotation",
+    "hyperf/framework": "Allows using @Value annotation"
   },
   "require-dev": {
   },
