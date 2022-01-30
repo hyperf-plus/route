@@ -29,7 +29,11 @@ class AdminController extends Controller
      * @var string
      */
     public $description = '';
-
+    /**
+     * 所属服务 预留，后面做微服务时用
+     * @var null|string
+     */
+    public $service = '';
     /**
      * 控制器内是否全部只需登录就可以访问？
      * @var bool
