@@ -5,6 +5,11 @@ namespace HPlus\Route;
 
 use HPlus\Route\Annotation\AdminController;
 use HPlus\Route\Annotation\ApiController;
+use HPlus\Route\Annotation\DeleteApi;
+use HPlus\Route\Annotation\GetApi;
+use HPlus\Route\Annotation\PatchApi;
+use HPlus\Route\Annotation\PostApi;
+use HPlus\Route\Annotation\PutApi;
 use Hyperf\Di\Exception\ConflictAnnotationException;
 use Hyperf\Di\ReflectionManager;
 use Hyperf\HttpServer\Annotation\AutoController;
@@ -34,13 +39,11 @@ class DispatcherFactory extends Dispatcher
      */
     protected function handleController(string $className, Controller $annotation, array $methodMetadata, array $middlewares = [], $prefix = ''): void
     {
-
         if (! $methodMetadata) {
             return;
         }
         $prefix = $this->getPrefix($className, $annotation->prefix);
         $router = $this->getRouter($annotation->server);
-
         $mappingAnnotations = [
             RequestMapping::class,
             GetMapping::class,
@@ -48,10 +51,14 @@ class DispatcherFactory extends Dispatcher
             PutMapping::class,
             PatchMapping::class,
             DeleteMapping::class,
-
+            GetApi::class,
+            PostApi::class,
+            PutApi::class,
+            DeleteApi::class,
+            PatchApi::class,
         ];
-
         foreach ($methodMetadata as $methodName => $values) {
+
             $options = $annotation->options;
             $methodMiddlewares = $middlewares;
             // Handle method level middlewares.

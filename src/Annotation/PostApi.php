@@ -11,4 +11,5 @@ use Hyperf\HttpServer\Annotation\Mapping;
 #[Attribute(Attribute::TARGET_METHOD)]
 class PostApi extends Mapping
 {
+    public array $methods = ['POST'];
 }

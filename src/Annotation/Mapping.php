@@ -17,6 +17,7 @@ abstract class Mapping extends AbstractAnnotation
      * @param array $methods
      * @param array $options
      */
+
     public function __construct(public ?string $path = null,
                                 public ?string $summary = null,
                                 public ?string $description = null,
@@ -26,6 +27,10 @@ abstract class Mapping extends AbstractAnnotation
                                 public array   $methods = [],
                                 public array   $options = [])
     {
-
+        foreach (array_filter(array_merge(func_get_args() + get_class_vars(static::class))) as $key => $val) {
+            if (property_exists($this, $key)) {
+                $this->{$key} = $val;
+            }
+        }
     }
 }

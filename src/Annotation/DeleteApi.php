@@ -11,5 +11,5 @@ use Hyperf\HttpServer\Annotation\Mapping;
 #[Attribute(Attribute::TARGET_METHOD)]
 class DeleteApi extends Mapping
 {
-
+    public array $methods = ['DELETE'];
 }

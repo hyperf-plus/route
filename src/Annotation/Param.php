@@ -35,5 +35,10 @@ abstract class Param extends AbstractAnnotation
         public ?string $validate = null
     )
     {
+        foreach (array_filter(array_merge(func_get_args() + get_class_vars(static::class))) as $key => $val) {
+            if (property_exists($this, $key)) {
+                $this->{$key} = $val;
+            }
+        }
     }
 }

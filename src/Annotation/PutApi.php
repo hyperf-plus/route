@@ -1,4 +1,5 @@
 <?php
+
 namespace HPlus\Route\Annotation;
 
 
@@ -11,5 +12,5 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD)]
 class PutApi extends Mapping
 {
-
+    public array $methods = ['PUT'];
 }
