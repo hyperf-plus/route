@@ -1,14 +1,16 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
+
 namespace HPlus\Route\Annotation;
+
+use Attribute;
 
 /**
  * @Annotation
  * @Target({"METHOD"})
  */
+#[Attribute(Attribute::TARGET_METHOD)]
 class Query extends Param
 {
-    public $in = 'query';
-    public $scene = '';
-    public $validate = '';
+    public ?string $in = 'query';
 }

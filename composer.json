@@ -15,7 +15,7 @@
     "Vue"
   ],
   "require": {
-    "php": ">=7.3"
+    "php": ">=8.0"
   },
   "suggest": {
     "ext-swoole": "Allows using @Value annotation",
@@ -30,7 +30,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Mzh\\Admin\\Tests\\": "tests"
+      "HPlus\\Route\\Tests\\": "tests"
     }
   },
   "extra": {

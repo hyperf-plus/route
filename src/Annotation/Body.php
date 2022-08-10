@@ -3,41 +3,18 @@ declare(strict_types=1);
 
 namespace HPlus\Route\Annotation;
 
+use Attribute;
+
 /**
  * @Annotation
  * @Target({"METHOD"})
  */
+#[Attribute(Attribute::TARGET_METHOD)]
 class Body extends Param
 {
-    public $in = 'body';
-    public $name = 'body';
-    public $rules = [];
-    public $description = 'body';
-    public $security = true;
+    public ?string $in = 'body';
+    public ?string $name = 'body';
+    public ?string $description = 'body';
+    public bool $security = true;
 
-    public function __construct($value = null)
-    {
-        if (is_array($value)) {
-            foreach ($value as $key => $val) {
-                if (property_exists($this, $key)) {
-                    $this->{$key} = $val;
-                }
-            }
-        }
-        $this->setRquire();
-    }
-
-    public function setRquire()
-    {
-
-        $this->required = strpos(json_encode($this->rules), 'required') !== false;
-        return $this;
-    }
-
-    public function setType()
-    {
-        $this->type = '';
-
-        return $this;
-    }
 }

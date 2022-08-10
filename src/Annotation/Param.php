@@ -7,110 +7,33 @@ use Hyperf\Di\Annotation\AbstractAnnotation;
 abstract class Param extends AbstractAnnotation
 {
     /**
-     * @var string 在哪个结构
+     * @param string $key 字段key,相当于"name[|description]"
+     * @param string|null $in 位置
+     * @param string|null $name 字段名
+     * @param string|null $description 字段描述
+     * @param bool $required
+     * @param bool $security
+     * @param string|null $default
+     * @param string|null $type
+     * @param bool $userOpen
+     * @param array $enum 字段枚举值
+     * @param string|null $scene
+     * @param string|null $validate
      */
-    public $in;
-
-    /**
-     * @var string 字段key,相当于"name[|description]"
-     */
-    public $key;
-
-
-    /**
-     * @var string 单个规则字符串
-     */
-    public $rule;
-
-
-    /**
-     * @var string 默认值
-     */
-    public $default;
-
-
-    /**
-     * @var string 字段名
-     */
-    public $name;
-
-
-    /**
-     * @var string 字段描述
-     */
-    public $description;
-
-
-    /**
-     * @var array 详细规则数组
-     */
-    public $_detailRules = [];
-
-
-    /**
-     * @var bool 是否必须
-     */
-    public $required = false;
-
-
-    /**
-     * @var string 字段类型
-     */
-    public $type;
-
-
-    /**
-     * @var array 字段枚举值
-     */
-    public $enum;
-
-    public $extra = [];
-    public $example;
-
-
-    public function __construct($value = null)
+    public function __construct(
+        public string  $key,
+        public ?string $in = null,
+        public ?string $name = null,
+        public ?string $description = null,
+        public bool    $required = false,
+        public bool    $security = false,
+        public ?string $default = null,
+        public ?string $type = null,
+        public bool    $userOpen = false,
+        public array   $enum = [],
+        public ?string $scene = null,
+        public ?string $validate = null
+    )
     {
-        parent::__construct($value);
-        $this->setName()->setDescription()->setRquire()->setType();
-    }
-
-    public function setName()
-    {
-        if (!empty($this->name)) {
-            return $this;
-        }
-        $this->name = explode('|', $this->key)[0];
-        return $this;
-    }
-
-    public function setDescription()
-    {
-        if (!empty($this->description)) {
-            return $this;
-        }
-        $this->description = $this->description ?: explode('|', $this->key)[1] ?? '';
-
-        return $this;
-    }
-
-    public function setRquire()
-    {
-        if ($this->required === null) {
-            $this->required = strpos($this->rule, 'required') !== false;
-        }
-        return $this;
-    }
-
-    public function setType()
-    {
-        if (!empty($this->type)) {
-            return $this;
-        }
-        $type = 'string';
-        if (strpos($this->rule, 'int') !== false) {
-            $type = 'integer';
-        }
-        $this->type = $type;
-        return $this;
     }
 }

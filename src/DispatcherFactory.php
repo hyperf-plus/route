@@ -9,9 +9,17 @@ use Hyperf\Di\Exception\ConflictAnnotationException;
 use Hyperf\Di\ReflectionManager;
 use Hyperf\HttpServer\Annotation\AutoController;
 use Hyperf\HttpServer\Annotation\Controller;
+use Hyperf\HttpServer\Annotation\DeleteMapping;
+use Hyperf\HttpServer\Annotation\GetMapping;
 use Hyperf\HttpServer\Annotation\Mapping;
+use Hyperf\HttpServer\Annotation\PatchMapping;
+use Hyperf\HttpServer\Annotation\PostMapping;
+use Hyperf\HttpServer\Annotation\PutMapping;
+use Hyperf\HttpServer\Annotation\RequestMapping;
 use Hyperf\HttpServer\Router\DispatcherFactory as Dispatcher;
 use Hyperf\HttpServer\Router\RouteCollector;
+use Hyperf\Utils\Arr;
+use Hyperf\Utils\Str;
 
 class DispatcherFactory extends Dispatcher
 {
@@ -26,49 +34,56 @@ class DispatcherFactory extends Dispatcher
      */
     protected function handleController(string $className, Controller $annotation, array $methodMetadata, array $middlewares = [], $prefix = ''): void
     {
-        $class = ReflectionManager::reflectClass($className);
-        $methods = $class->getMethods(\ReflectionMethod::IS_PUBLIC);
-        if ($annotation->prefix != '' && $annotation->prefix[0] !== '/') {
-            $annotation->prefix = '/' . $annotation->prefix;
+
+        if (! $methodMetadata) {
+            return;
         }
-        $service = $annotation->service ?? '';
-        $prefix = !empty($service) ? ('/' . trim($service, '/') . $prefix) : $prefix;
-        $prefix = $prefix . $this->getPrefix($className, $annotation->prefix);
+        $prefix = $this->getPrefix($className, $annotation->prefix);
         $router = $this->getRouter($annotation->server);
-        foreach ($methods as $methodName => $method) {
+
+        $mappingAnnotations = [
+            RequestMapping::class,
+            GetMapping::class,
+            PostMapping::class,
+            PutMapping::class,
+            PatchMapping::class,
+            DeleteMapping::class,
+
+        ];
+
+        foreach ($methodMetadata as $methodName => $values) {
+            $options = $annotation->options;
             $methodMiddlewares = $middlewares;
             // Handle method level middlewares.
-            $methodName = $method->getName();
-            if (isset($methodMetadata[$methodName])) {
-                $methodMiddlewares = array_merge($methodMiddlewares, $this->handleMiddleware($methodMetadata[$methodName]));
-                $methodMiddlewares = array_unique($methodMiddlewares);
+            if (isset($values)) {
+                $methodMiddlewares = array_merge($methodMiddlewares, $this->handleMiddleware($values));
             }
-            if (substr($methodName, 0, 2) === '__') {
-                continue;
-            }
-            $methodAnnotations = ApiAnnotation::methodMetadata($method->class, $method->name);
-            foreach ($methodAnnotations as $mapping) {
-                if (!$mapping instanceof Mapping) {
-                    continue;
+            // Rewrite by annotation @Middleware for Controller.
+            $options['middleware'] = array_unique($methodMiddlewares);
+            foreach ($mappingAnnotations as $mappingAnnotation) {
+                /** @var Mapping $mapping */
+                if ($mapping = $values[$mappingAnnotation] ?? null) {
+                    if (! isset($mapping->methods) || ! isset($mapping->options)) {
+                        continue;
+                    }
+                    $methodOptions = Arr::merge($options, $mapping->options);
+                    // Rewrite by annotation @Middleware for method.
+                    $methodOptions['middleware'] = $options['middleware'];
+                    if (! isset($mapping->path)) {
+                        $path = $prefix . '/' . Str::snake($methodName);
+                    } elseif ($mapping->path === '') {
+                        $path = $prefix;
+                    } elseif ($mapping->path[0] !== '/') {
+                        $path = rtrim($prefix, '/') . '/' . $mapping->path;
+                    } else {
+                        $path = $mapping->path;
+                    }
+                    $path = str_replace('/_self_path', '', $path);
+                    if (!str_starts_with($path, '/')) {
+                        $path = '/' . $path;
+                    }
+                    $router->addRoute($mapping->methods, $path, [$className, $methodName], $methodOptions);
                 }
-                if (!isset($mapping->methods)) {
-                    continue;
-                }
-
-                $path = $prefix . '/' . $methodName;
-                if ($mapping->path) {
-                    $path = $prefix . '/' . $mapping->path;
-                }
-                if ($this->hasRoute($router, $mapping, $path)) {
-                    continue;
-                }
-                $path = str_replace('/_self_path', '', $path);
-                if (substr($path, 0, 1) !== '/') {
-                    $path = '/' . $path;
-                }
-                $router->addRoute($mapping->methods, $path, [$className, $methodName], [
-                    'middleware' => $methodMiddlewares,
-                ]);
             }
         }
     }
