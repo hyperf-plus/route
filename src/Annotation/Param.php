@@ -31,6 +31,8 @@ abstract class Param extends AbstractAnnotation
         public ?string $type = null,
         public bool    $userOpen = false,
         public array   $enum = [],
+        public ?string $rule = '',
+        public ?array  $rules = [],
         public ?string $scene = null,
         public ?string $validate = null
     )
