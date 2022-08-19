@@ -21,7 +21,7 @@ abstract class Param extends AbstractAnnotation
      * @param string|null $validate
      */
     public function __construct(
-        public string  $key,
+        public ?string  $key = null,
         public ?string $in = null,
         public ?string $name = null,
         public ?string $description = null,
