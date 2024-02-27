@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace HPlus\Route;
 
-use Mzh\Admin\Contracts\AuthInterface;
-use Mzh\Admin\Library\Auth;
-
 class ConfigProvider
 {
     public function __invoke(): array

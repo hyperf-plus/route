@@ -10,8 +10,8 @@ use HPlus\Route\Annotation\GetApi;
 use HPlus\Route\Annotation\PatchApi;
 use HPlus\Route\Annotation\PostApi;
 use HPlus\Route\Annotation\PutApi;
+use Hyperf\Collection\Arr;
 use Hyperf\Di\Exception\ConflictAnnotationException;
-use Hyperf\Di\ReflectionManager;
 use Hyperf\HttpServer\Annotation\AutoController;
 use Hyperf\HttpServer\Annotation\Controller;
 use Hyperf\HttpServer\Annotation\DeleteMapping;
@@ -23,8 +23,8 @@ use Hyperf\HttpServer\Annotation\PutMapping;
 use Hyperf\HttpServer\Annotation\RequestMapping;
 use Hyperf\HttpServer\Router\DispatcherFactory as Dispatcher;
 use Hyperf\HttpServer\Router\RouteCollector;
-use Hyperf\Utils\Arr;
-use Hyperf\Utils\Str;
+use Hyperf\Stringable\Str;
+use function Hyperf\Config\config;
 
 class DispatcherFactory extends Dispatcher
 {
