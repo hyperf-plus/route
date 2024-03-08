@@ -42,7 +42,10 @@ class DispatcherFactory extends Dispatcher
         if (! $methodMetadata) {
             return;
         }
-        $prefix = $this->getPrefix($className, $annotation->prefix);
+        $auto_prefix = $this->getPrefix($className,  $annotation->prefix );
+        if ($prefix){
+            $prefix .= $auto_prefix;
+        }
         $router = $this->getRouter($annotation->server);
         $mappingAnnotations = [
             RequestMapping::class,
