@@ -47,19 +47,6 @@ class DispatcherFactory extends Dispatcher
             $prefix .= $auto_prefix;
         }
         $router = $this->getRouter($annotation->server);
-        $mappingAnnotations = [
-            RequestMapping::class,
-            GetMapping::class,
-            PostMapping::class,
-            PutMapping::class,
-            PatchMapping::class,
-            DeleteMapping::class,
-            GetApi::class,
-            PostApi::class,
-            PutApi::class,
-            DeleteApi::class,
-            PatchApi::class,
-        ];
         foreach ($methodMetadata as $methodName => $values) {
 
             $options = $annotation->options;
@@ -70,30 +57,29 @@ class DispatcherFactory extends Dispatcher
             }
             // Rewrite by annotation @Middleware for Controller.
             $options['middleware'] = array_unique($methodMiddlewares);
-            foreach ($mappingAnnotations as $mappingAnnotation) {
-                /** @var Mapping $mapping */
-                if ($mapping = $values[$mappingAnnotation] ?? null) {
-                    if (! isset($mapping->methods) || ! isset($mapping->options)) {
-                        continue;
-                    }
-                    $methodOptions = Arr::merge($options, $mapping->options);
-                    // Rewrite by annotation @Middleware for method.
-                    $methodOptions['middleware'] = $options['middleware'];
-                    if (! isset($mapping->path)) {
-                        $path = $prefix . '/' . Str::snake($methodName);
-                    } elseif ($mapping->path === '') {
-                        $path = $prefix;
-                    } elseif ($mapping->path[0] !== '/') {
-                        $path = rtrim($prefix, '/') . '/' . $mapping->path;
-                    } else {
-                        $path = $mapping->path;
-                    }
-                    $path = str_replace('/_self_path', '', $path);
-                    if (!str_starts_with($path, '/')) {
-                        $path = '/' . $path;
-                    }
-                    $router->addRoute($mapping->methods, $path, [$className, $methodName], $methodOptions);
+            foreach ($values as $mapping){
+                /**
+                 * @var RequestMapping $mapping
+                 */
+                if (! isset($mapping->methods) || ! isset($mapping->options)) {
+                    continue;
                 }
+                $methodOptions = Arr::merge($options, $mapping->options);
+                $methodOptions['middleware'] = $options['middleware'];
+                if (! isset($mapping->path)) {
+                    $path = $prefix . '/' . Str::snake($methodName);
+                } elseif ($mapping->path === '') {
+                    $path = $prefix;
+                } elseif ($mapping->path[0] !== '/') {
+                    $path = rtrim($prefix, '/') . '/' . $mapping->path;
+                } else {
+                    $path = $mapping->path;
+                }
+                $path = str_replace('/_self_path', '', $path);
+                if (!str_starts_with($path, '/')) {
+                    $path = '/' . $path;
+                }
+                $router->addRoute($mapping->methods, $path, [$className, $methodName], $methodOptions);
             }
         }
     }
