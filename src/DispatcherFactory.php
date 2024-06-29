@@ -96,6 +96,21 @@ class DispatcherFactory extends Dispatcher
         }
     }
 
+    protected function getPrefix(string $className, string $prefix, string $service = ""): string
+    {
+        if (!$prefix) {
+            $handledNamespace = Str::replaceFirst('Controller', '', Str::after($className, '\Controller\\'));
+            $handledNamespace = str_replace('\\', '/', $service . "\\" . $handledNamespace);
+            $prefix = Str::snake($handledNamespace);
+            $prefix = str_replace('/_', '/', $prefix);
+        }
+
+        if ($prefix[0] !== '/') {
+            $prefix = '/' . $prefix;
+        }
+        return $prefix;
+    }
+
     protected function initAnnotationRoute(array $collector): void
     {
         foreach ($collector as $className => $metadata) {
