@@ -43,7 +43,7 @@ class DispatcherFactory extends Dispatcher
             return;
         }
         $auto_prefix = $this->getPrefix($className,  $annotation->prefix );
-        if ($prefix){
+        if (!$prefix){
             $prefix .= $auto_prefix;
         }
         $router = $this->getRouter($annotation->server);
