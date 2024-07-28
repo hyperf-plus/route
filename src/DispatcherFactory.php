@@ -66,7 +66,7 @@ class DispatcherFactory extends Dispatcher
                 $methodMiddlewares = array_merge($methodMiddlewares, $this->handleMiddleware($values));
             }
             // Rewrite by annotation @Middleware for Controller.
-            $options['middleware'] = array_unique($methodMiddlewares);
+            $options['middleware'] = $methodMiddlewares;
             foreach ($mappingAnnotations as $mappingAnnotation) {
                 /** @var Mapping $mapping */
                 if ($mapping = $values[$mappingAnnotation] ?? null) {
