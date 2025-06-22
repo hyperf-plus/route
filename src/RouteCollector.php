@@ -366,13 +366,14 @@ class RouteCollector
             'methods' => $routeAnnotation->methods,
             'controller' => $className,
             'action' => $methodName,
-            'name' => $routeAnnotation->name ?? "{$className}::{$methodName}",
-            'middleware' => $routeAnnotation->middleware ?? [],
+            'name' => "{$className}::{$methodName}",
+            'middleware' => $routeAnnotation->options['middleware'] ?? [],
             'summary' => $routeAnnotation->summary ?? $this->generateSummary($methodName, $httpMethod),
             'description' => $routeAnnotation->description ?? '',
             'deprecated' => $routeAnnotation->deprecated ?? false,
             'tags' => $this->getTags($controllerAnnotation, $className),
-            'security' => $routeAnnotation->security || $controllerAnnotation->security,
+            'security' => ($routeAnnotation->security ?? true) && ($controllerAnnotation->security ?? true),
+            'userOpen' => ($routeAnnotation->userOpen ?? false) || ($controllerAnnotation->userOpen ?? false),
             'restful' => $this->isRestfulMethod($methodName), // 标记是否符合RESTful约定
             'smart_path' => !isset($routeAnnotation->path) && !$this->isRestfulMethod($methodName), // 标记是否为智能生成
         ];
@@ -848,11 +849,14 @@ class RouteCollector
 
         // 查询参数（从验证注解）
         if (class_exists(RequestValidation::class)) {
-            $validation = AnnotationCollector::getMethodAnnotation(
-                $method->getDeclaringClass()->getName(),
-                $method->getName(),
-                RequestValidation::class
-            );
+            $className = $method->getDeclaringClass()->getName();
+            $methodName = $method->getName();
+            
+            $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+            $validation = null;
+            if ($methodAnnotations && isset($methodAnnotations[RequestValidation::class])) {
+                $validation = $methodAnnotations[RequestValidation::class];
+            }
 
             if ($validation && !empty($validation->rules)) {
                 $parameters = array_merge($parameters, $this->extractValidationParameters($validation));
@@ -1020,8 +1024,8 @@ class RouteCollector
     public function getCacheStats(): array
     {
         return [
-            'route_cache_size' => count($this->routeCache),
-            'controller_cache_size' => count($this->controllerCache),
+            'routes_cached' => count($this->routeCache),
+            'controllers_cached' => count($this->controllerCache),
             'reflection_cache_size' => count($this->reflectionCache),
             'index_size' => array_sum(array_map('count', $this->routeIndex)),
             'restful_routes' => count($this->routeIndex['restful'] ?? []),
@@ -1064,11 +1068,14 @@ class RouteCollector
             return null;
         }
 
-        $validation = AnnotationCollector::getMethodAnnotation(
-            $method->getDeclaringClass()->getName(),
-            $method->getName(),
-            RequestValidation::class
-        );
+        $className = $method->getDeclaringClass()->getName();
+        $methodName = $method->getName();
+        
+        $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+        $validation = null;
+        if ($methodAnnotations && isset($methodAnnotations[RequestValidation::class])) {
+            $validation = $methodAnnotations[RequestValidation::class];
+        }
 
         if (!$validation || empty($validation->rules) || $validation->dateType !== 'json') {
             return null;
@@ -1119,15 +1126,13 @@ class RouteCollector
             DeleteApi::class, PatchApi::class
         ];
 
+        $className = $method->getDeclaringClass()->getName();
+        $methodName = $method->getName();
+
         foreach ($routeAnnotations as $annotationClass) {
-            $annotation = AnnotationCollector::getMethodAnnotation(
-                $method->getDeclaringClass()->getName(),
-                $method->getName(),
-                $annotationClass
-            );
-            
-            if ($annotation) {
-                return $annotation;
+            $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+            if ($methodAnnotations && isset($methodAnnotations[$annotationClass])) {
+                return $methodAnnotations[$annotationClass];
             }
         }
 
@@ -1228,10 +1233,10 @@ class RouteCollector
     {
         $routes = $this->collectRoutes();
         $stats = [
-            'total' => count($routes),
-            'methods' => [],
-            'controllers' => [],
-            'tags' => [],
+            'total_routes' => count($routes),
+            'total_controllers' => count(array_unique(array_column($routes, 'controller'))),
+            'methods_distribution' => [],
+            'path_patterns' => [],
             'restful_count' => 0,
             'custom_count' => 0,
         ];
@@ -1239,17 +1244,12 @@ class RouteCollector
         foreach ($routes as $route) {
             // 统计HTTP方法
             foreach ($route['methods'] as $method) {
-                $stats['methods'][$method] = ($stats['methods'][$method] ?? 0) + 1;
+                $stats['methods_distribution'][$method] = ($stats['methods_distribution'][$method] ?? 0) + 1;
             }
 
-            // 统计控制器
-            $controller = $route['controller'];
-            $stats['controllers'][$controller] = ($stats['controllers'][$controller] ?? 0) + 1;
-
-            // 统计标签
-            foreach ($route['tags'] as $tag) {
-                $stats['tags'][$tag] = ($stats['tags'][$tag] ?? 0) + 1;
-            }
+            // 统计路径模式
+            $pathPattern = preg_replace('/\{[^}]+\}/', '{param}', $route['path']);
+            $stats['path_patterns'][$pathPattern] = ($stats['path_patterns'][$pathPattern] ?? 0) + 1;
             
             // 统计RESTful vs 自定义
             if ($route['restful'] ?? false) {
