@@ -45,6 +45,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试单例模式实现 / Test singleton pattern implementation
      * @test
      * @group singleton
      */
@@ -58,6 +59,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试API控制器路由收集功能 / Test API controller route collection functionality
      * @test
      * @group route-collection
      */
@@ -77,6 +79,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试路由格式生成是否正确 / Test if route format generation is correct
      * @test
      * @group route-format
      */
@@ -100,6 +103,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试显式路径处理是否正确 / Test if explicit path handling is correct
      * @test
      * @group route-path
      */
@@ -125,6 +129,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试RESTful路由生成是否正确 / Test if RESTful route generation is correct
      * @test
      * @group restful-mapping
      */
@@ -164,6 +169,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试控制器前缀应用是否正确 / Test if controller prefix application is correct
      * @test
      * @group route-prefix
      */
@@ -181,6 +187,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试按路径查找路由功能 / Test finding routes by path functionality
      * @test
      * @group route-search
      */
@@ -198,6 +205,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试按控制器查找路由功能 / Test finding routes by controller functionality
      * @test
      * @group route-search
      */
@@ -214,6 +222,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试按HTTP方法查找路由功能 / Test finding routes by HTTP method functionality
      * @test
      * @group route-search
      */
@@ -237,6 +246,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试路由缓存机制是否正确 / Test if route caching mechanism is correct
      * @test
      * @group cache
      */
@@ -257,6 +267,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试缓存清理功能 / Test cache clearing functionality
      * @test
      * @group cache
      */
@@ -277,6 +288,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试性能表现是否可接受 / Test if performance is acceptable
      * @test
      * @group performance
      */
@@ -299,6 +311,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试处理无路由控制器的边界情况 / Test handling controllers without routes edge case
      * @test
      * @group edge-cases
      */
@@ -312,6 +325,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试路由统计信息功能 / Test route statistics functionality
      * @test
      * @group statistics
      */
@@ -332,10 +346,10 @@ final class RouteCollectorTest extends AbstractTestCase
         $this->assertGreaterThan(0, $stats['total_routes']);
     }
 
-    // ========== 辅助方法 ==========
+    // ========== 辅助方法 Helper Methods ==========
 
     /**
-     * 清理注解收集器
+     * 清理注解收集器 / Clear annotation collector
      */
     private function clearAnnotationCollector(): void
     {
@@ -346,7 +360,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
-     * 注册测试控制器注解
+     * 注册测试控制器注解 / Register test controller annotations
      */
     private function registerTestControllerAnnotations(): void
     {
@@ -371,7 +385,7 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
-     * 注册方法注解
+     * 注册方法注解 / Register method annotations
      */
     private function registerMethodAnnotations(string $className): void
     {

@@ -31,6 +31,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试完整路由收集工作流 / Test complete route collection workflow
      * @test
      * @group complete-workflow
      */
@@ -66,6 +67,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试RESTful API完整生成 / Test complete RESTful API generation
      * @test
      * @group restful-api
      */
@@ -110,6 +112,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试不同场景下路径生成 / Test path generation for different scenarios
      * @test
      * @group path-generation
      */
@@ -134,6 +137,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试路由元数据完整性 / Test completeness of route metadata
      * @test
      * @group route-metadata
      */
@@ -167,6 +171,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试多控制器环境下的性能 / Test performance with multiple controllers
      * @test
      * @group performance-integration
      */
@@ -193,6 +198,7 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试缓存行为 / Test caching behavior
      * @test
      * @group caching-behavior
      */
@@ -220,8 +226,9 @@ final class RouteCollectionFeatureTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试边界情况处理 / Test edge case handling
      * @test
-     * @group error-handling
+     * @group edge-cases
      */
     public function it_handles_edge_cases_gracefully(): void
     {

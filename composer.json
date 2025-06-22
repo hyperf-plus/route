@@ -52,9 +52,19 @@
   },
   "scripts": {
     "test": "phpunit --colors=always",
-    "test-coverage": "phpunit --coverage-html coverage",
+    "test-unit": "phpunit --colors=always tests/Unit",
+    "test-feature": "phpunit --colors=always tests/Feature",
+    "test-coverage": "phpunit --coverage-html coverage --coverage-text",
+    "test-performance": "phpunit --colors=always --group performance",
+    "test-docs": "phpunit --testdox",
+    "test-groups": "phpunit --list-groups",
     "analyse": "phpstan analyse src --level 8",
-    "cs-fix": "php-cs-fixer fix src"
+    "cs-fix": "php-cs-fixer fix src",
+    "quality": [
+      "@test",
+      "@analyse",
+      "@cs-fix"
+    ]
   },
   "extra": {
     "hyperf": {

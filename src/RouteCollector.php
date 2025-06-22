@@ -67,6 +67,11 @@ class RouteCollector
     private array $routeIndex = [];
 
     /**
+     * 路由缓存开关
+     */
+    private bool $enableCache;
+
+    /**
      * RESTful方法映射规则
      * [方法名 => [HTTP方法期望, 路径模板]]
      */
@@ -243,9 +248,12 @@ class RouteCollector
      */
     private function getReflectionClassWithCache(string $className): ReflectionClass
     {
-        if (!isset($this->reflectionCache[$className])) {
-            $this->reflectionCache[$className] = new ReflectionClass($className);
+        if (isset($this->reflectionCache[$className])) {
+            return $this->reflectionCache[$className];
         }
+        
+        $this->reflectionCache[$className] = new ReflectionClass($className);
+
         return $this->reflectionCache[$className];
     }
 
@@ -358,6 +366,11 @@ class RouteCollector
         
         // 获取路径（增强版：支持智能参数识别）
         $routePath = $this->getRoutePathEnhanced($methodName, $httpMethod, $routeAnnotation, $method);
+        
+        // 确保路径正确拼接（与 DispatcherFactory 保持一致）
+        if ($routePath && !str_starts_with($routePath, '/')) {
+            $routePath = '/' . $routePath;
+        }
         
         $fullPath = $this->normalizePath($controllerPrefix . $routePath);
         
@@ -1019,21 +1032,6 @@ class RouteCollector
     }
 
     /**
-     * 获取缓存统计信息
-     */
-    public function getCacheStats(): array
-    {
-        return [
-            'routes_cached' => count($this->routeCache),
-            'controllers_cached' => count($this->controllerCache),
-            'reflection_cache_size' => count($this->reflectionCache),
-            'index_size' => array_sum(array_map('count', $this->routeIndex)),
-            'restful_routes' => count($this->routeIndex['restful'] ?? []),
-            'memory_usage' => memory_get_usage(true),
-        ];
-    }
-
-    /**
      * 优化内存使用
      */
     public function optimizeMemory(): void
@@ -1224,41 +1222,5 @@ class RouteCollector
     {
         $routes = $this->collectRoutes();
         return array_unique(array_column($routes, 'path'));
-    }
-
-    /**
-     * 获取路由统计信息
-     */
-    public function getRouteStats(): array
-    {
-        $routes = $this->collectRoutes();
-        $stats = [
-            'total_routes' => count($routes),
-            'total_controllers' => count(array_unique(array_column($routes, 'controller'))),
-            'methods_distribution' => [],
-            'path_patterns' => [],
-            'restful_count' => 0,
-            'custom_count' => 0,
-        ];
-
-        foreach ($routes as $route) {
-            // 统计HTTP方法
-            foreach ($route['methods'] as $method) {
-                $stats['methods_distribution'][$method] = ($stats['methods_distribution'][$method] ?? 0) + 1;
-            }
-
-            // 统计路径模式
-            $pathPattern = preg_replace('/\{[^}]+\}/', '{param}', $route['path']);
-            $stats['path_patterns'][$pathPattern] = ($stats['path_patterns'][$pathPattern] ?? 0) + 1;
-            
-            // 统计RESTful vs 自定义
-            if ($route['restful'] ?? false) {
-                $stats['restful_count']++;
-            } else {
-                $stats['custom_count']++;
-            }
-        }
-
-        return $stats;
     }
 } 

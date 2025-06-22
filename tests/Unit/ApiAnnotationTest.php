@@ -15,6 +15,7 @@ use HPlus\Route\Tests\Fixtures\TestApiController;
 final class ApiAnnotationTest extends AbstractTestCase
 {
     /**
+     * @testdox 测试获取方法元数据功能 / Test getting method metadata functionality
      * @test
      * @group method-metadata
      */
@@ -31,6 +32,7 @@ final class ApiAnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试处理不存在方法的情况 / Test handling non-existent method
      * @test
      * @group method-metadata
      */
@@ -45,6 +47,7 @@ final class ApiAnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试处理不存在类的情况 / Test handling non-existent class
      * @test
      * @group method-metadata
      */
@@ -59,6 +62,7 @@ final class ApiAnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试使用反射管理器 / Test using reflection manager
      * @test
      * @group reflection
      */
@@ -74,6 +78,7 @@ final class ApiAnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试处理多个方法调用 / Test handling multiple method calls
      * @test
      * @group multiple-methods
      */
@@ -92,6 +97,7 @@ final class ApiAnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试性能表现可接受 / Test acceptable performance
      * @test
      * @group performance
      */

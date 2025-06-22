@@ -77,7 +77,8 @@ class DispatcherFactory extends Dispatcher
                     // Rewrite by annotation @Middleware for method.
                     $methodOptions['middleware'] = $options['middleware'];
                     if (!isset($mapping->path)) {
-                        $path = $prefix . '/' . Str::snake($methodName);
+                        // 使用 RESTful 规则生成路径
+                        $path = $this->getRestfulPath($methodName, $mapping->methods[0] ?? 'GET', $prefix);
                     } elseif ($mapping->path === '') {
                         $path = $prefix;
                     } elseif ($mapping->path[0] !== '/') {
@@ -103,6 +104,15 @@ class DispatcherFactory extends Dispatcher
             $handledNamespace = str_replace('\\', '/', $service . "\\" . $handledNamespace);
             $prefix = Str::snake($handledNamespace);
             $prefix = str_replace('/_', '/', $prefix);
+            
+            // RESTful 风格：转换为复数形式
+            $parts = explode('/', $prefix);
+            $lastPart = array_pop($parts);
+            if ($lastPart) {
+                $lastPart = $this->pluralize($lastPart);
+                $parts[] = $lastPart;
+            }
+            $prefix = implode('/', $parts);
         }
 
         if ($prefix[0] !== '/') {
@@ -150,6 +160,96 @@ class DispatcherFactory extends Dispatcher
             }
         }
         return false;
+    }
+
+    /**
+     * 根据 RESTful 规则生成路径
+     */
+    private function getRestfulPath(string $methodName, string $httpMethod, string $prefix): string
+    {
+        // RESTful 方法映射规则
+        $restfulMapping = [
+            // 列表操作
+            'index' => ['GET', ''],
+            'list' => ['GET', ''],
+            
+            // 详情操作
+            'show' => ['GET', '/{id}'],
+            'detail' => ['GET', '/{id}'],
+            'get' => ['GET', '/{id}'],
+            
+            // 创建操作
+            'create' => ['POST', ''],
+            'store' => ['POST', ''],
+            'add' => ['POST', ''],
+            
+            // 更新操作
+            'update' => ['PUT', '/{id}'],
+            'edit' => ['PUT', '/{id}'],
+            'modify' => ['PUT', '/{id}'],
+            'patch' => ['PATCH', '/{id}'],
+            
+            // 删除操作
+            'delete' => ['DELETE', '/{id}'],
+            'destroy' => ['DELETE', '/{id}'],
+            'remove' => ['DELETE', '/{id}'],
+        ];
+
+        // 检查是否符合 RESTful 映射
+        if (isset($restfulMapping[$methodName])) {
+            [$expectedMethod, $pathTemplate] = $restfulMapping[$methodName];
+            
+            // 如果 HTTP 方法匹配，使用 RESTful 路径模板
+            if (strtoupper($httpMethod) === $expectedMethod) {
+                return $prefix . $pathTemplate;
+            }
+        }
+
+        // 默认：方法名转路径
+        return $prefix . '/' . Str::snake($methodName);
+    }
+
+    /**
+     * 将单词转换为复数形式（简单规则）
+     */
+    private function pluralize(string $word): string
+    {
+        // 常见不规则复数
+        $irregular = [
+            'person' => 'people',
+            'child' => 'children',
+            'man' => 'men',
+            'woman' => 'women',
+            'tooth' => 'teeth',
+            'foot' => 'feet',
+            'mouse' => 'mice',
+            'goose' => 'geese',
+        ];
+
+        $lowerWord = strtolower($word);
+        
+        // 检查不规则复数
+        if (isset($irregular[$lowerWord])) {
+            return $irregular[$lowerWord];
+        }
+
+        // 已经是复数形式
+        if (str_ends_with($word, 's') || str_ends_with($word, 'es')) {
+            return $word;
+        }
+
+        // 应用常见规则
+        if (str_ends_with($word, 'y') && !in_array(substr($word, -2, 1), ['a', 'e', 'i', 'o', 'u'])) {
+            return substr($word, 0, -1) . 'ies';
+        }
+
+        if (str_ends_with($word, 's') || str_ends_with($word, 'x') || 
+            str_ends_with($word, 'z') || str_ends_with($word, 'ch') || 
+            str_ends_with($word, 'sh')) {
+            return $word . 'es';
+        }
+
+        return $word . 's';
     }
 
 }

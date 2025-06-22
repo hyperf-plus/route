@@ -21,6 +21,7 @@ use HPlus\Route\Annotation\Mapping;
 final class AnnotationTest extends AbstractTestCase
 {
     /**
+     * @testdox 测试创建API控制器注解 / Test creating API controller annotation
      * @test
      * @group api-controller
      */
@@ -42,6 +43,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试API控制器注解的默认值 / Test default values for API controller annotation
      * @test
      * @group api-controller
      */
@@ -62,6 +64,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建控制器注解 / Test creating controller annotation
      * @test
      * @group controller
      */
@@ -93,6 +96,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建GET API注解 / Test creating GET API annotation
      * @test
      * @group get-api
      */
@@ -117,6 +121,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试GET API注解的默认值 / Test default values for GET API annotation
      * @test
      * @group get-api
      */
@@ -135,6 +140,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建POST API注解 / Test creating POST API annotation
      * @test
      * @group post-api
      */
@@ -155,6 +161,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建PUT API注解 / Test creating PUT API annotation
      * @test
      * @group put-api
      */
@@ -173,6 +180,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建PATCH API注解 / Test creating PATCH API annotation
      * @test
      * @group patch-api
      */
@@ -191,6 +199,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建DELETE API注解 / Test creating DELETE API annotation
      * @test
      * @group delete-api
      */
@@ -209,6 +218,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试创建映射注解基类 / Test creating mapping annotation base class
      * @test
      * @group mapping
      */
@@ -239,6 +249,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试注解继承层次结构 / Test annotation inheritance hierarchy
      * @test
      * @group inheritance
      */
@@ -263,6 +274,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试每个注解的HTTP方法正确性 / Test correct HTTP methods for each annotation
      * @test
      * @group http-methods
      */
@@ -282,6 +294,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试作为PHP属性使用 / Test usage as PHP attributes
      * @test
      * @group attributes
      */
@@ -307,6 +320,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试动态属性赋值支持 / Test dynamic property assignment support
      * @test
      * @group dynamic-properties
      */
@@ -327,6 +341,7 @@ final class AnnotationTest extends AbstractTestCase
     }
 
     /**
+     * @testdox 测试注解属性验证 / Test annotation property validation
      * @test
      * @group validation
      */
