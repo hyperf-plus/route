@@ -8,18 +8,19 @@ class ConfigProvider
     public function __invoke(): array
     {
         return [
-            'commands' => [
+            'dependencies' => [
+                // 注册路由收集器
+                RouteCollector::class => RouteCollector::class,
             ],
             'annotations' => [
                 'scan' => [
                     'paths' => [
-                        __DIR__
+                        __DIR__,
                     ],
                 ],
             ],
-            'dependencies' => [
-                \Hyperf\HttpServer\Router\DispatcherFactory::class => DispatcherFactory::class
-            ]
+            'listeners' => [],
+            'publish' => [],
         ];
     }
 }
