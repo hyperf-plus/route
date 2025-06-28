@@ -67,6 +67,11 @@ class RouteCollector
     private array $routeIndex = [];
 
     /**
+     * 路由缓存开关
+     */
+    private bool $enableCache;
+
+    /**
      * RESTful方法映射规则
      * [方法名 => [HTTP方法期望, 路径模板]]
      */
@@ -243,9 +248,12 @@ class RouteCollector
      */
     private function getReflectionClassWithCache(string $className): ReflectionClass
     {
-        if (!isset($this->reflectionCache[$className])) {
-            $this->reflectionCache[$className] = new ReflectionClass($className);
+        if (isset($this->reflectionCache[$className])) {
+            return $this->reflectionCache[$className];
         }
+        
+        $this->reflectionCache[$className] = new ReflectionClass($className);
+
         return $this->reflectionCache[$className];
     }
 
@@ -359,6 +367,11 @@ class RouteCollector
         // 获取路径（增强版：支持智能参数识别）
         $routePath = $this->getRoutePathEnhanced($methodName, $httpMethod, $routeAnnotation, $method);
         
+        // 确保路径正确拼接（与 DispatcherFactory 保持一致）
+        if ($routePath && !str_starts_with($routePath, '/')) {
+            $routePath = '/' . $routePath;
+        }
+        
         $fullPath = $this->normalizePath($controllerPrefix . $routePath);
         
         $routeInfo = [
@@ -366,13 +379,14 @@ class RouteCollector
             'methods' => $routeAnnotation->methods,
             'controller' => $className,
             'action' => $methodName,
-            'name' => $routeAnnotation->name ?? "{$className}::{$methodName}",
-            'middleware' => $routeAnnotation->middleware ?? [],
+            'name' => "{$className}::{$methodName}",
+            'middleware' => $routeAnnotation->options['middleware'] ?? [],
             'summary' => $routeAnnotation->summary ?? $this->generateSummary($methodName, $httpMethod),
             'description' => $routeAnnotation->description ?? '',
             'deprecated' => $routeAnnotation->deprecated ?? false,
             'tags' => $this->getTags($controllerAnnotation, $className),
-            'security' => $routeAnnotation->security || $controllerAnnotation->security,
+            'security' => ($routeAnnotation->security ?? true) && ($controllerAnnotation->security ?? true),
+            'userOpen' => ($routeAnnotation->userOpen ?? false) || ($controllerAnnotation->userOpen ?? false),
             'restful' => $this->isRestfulMethod($methodName), // 标记是否符合RESTful约定
             'smart_path' => !isset($routeAnnotation->path) && !$this->isRestfulMethod($methodName), // 标记是否为智能生成
         ];
@@ -848,11 +862,14 @@ class RouteCollector
 
         // 查询参数（从验证注解）
         if (class_exists(RequestValidation::class)) {
-            $validation = AnnotationCollector::getMethodAnnotation(
-                $method->getDeclaringClass()->getName(),
-                $method->getName(),
-                RequestValidation::class
-            );
+            $className = $method->getDeclaringClass()->getName();
+            $methodName = $method->getName();
+            
+            $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+            $validation = null;
+            if ($methodAnnotations && isset($methodAnnotations[RequestValidation::class])) {
+                $validation = $methodAnnotations[RequestValidation::class];
+            }
 
             if ($validation && !empty($validation->rules)) {
                 $parameters = array_merge($parameters, $this->extractValidationParameters($validation));
@@ -1015,21 +1032,6 @@ class RouteCollector
     }
 
     /**
-     * 获取缓存统计信息
-     */
-    public function getCacheStats(): array
-    {
-        return [
-            'route_cache_size' => count($this->routeCache),
-            'controller_cache_size' => count($this->controllerCache),
-            'reflection_cache_size' => count($this->reflectionCache),
-            'index_size' => array_sum(array_map('count', $this->routeIndex)),
-            'restful_routes' => count($this->routeIndex['restful'] ?? []),
-            'memory_usage' => memory_get_usage(true),
-        ];
-    }
-
-    /**
      * 优化内存使用
      */
     public function optimizeMemory(): void
@@ -1064,11 +1066,14 @@ class RouteCollector
             return null;
         }
 
-        $validation = AnnotationCollector::getMethodAnnotation(
-            $method->getDeclaringClass()->getName(),
-            $method->getName(),
-            RequestValidation::class
-        );
+        $className = $method->getDeclaringClass()->getName();
+        $methodName = $method->getName();
+        
+        $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+        $validation = null;
+        if ($methodAnnotations && isset($methodAnnotations[RequestValidation::class])) {
+            $validation = $methodAnnotations[RequestValidation::class];
+        }
 
         if (!$validation || empty($validation->rules) || $validation->dateType !== 'json') {
             return null;
@@ -1119,15 +1124,13 @@ class RouteCollector
             DeleteApi::class, PatchApi::class
         ];
 
+        $className = $method->getDeclaringClass()->getName();
+        $methodName = $method->getName();
+
         foreach ($routeAnnotations as $annotationClass) {
-            $annotation = AnnotationCollector::getMethodAnnotation(
-                $method->getDeclaringClass()->getName(),
-                $method->getName(),
-                $annotationClass
-            );
-            
-            if ($annotation) {
-                return $annotation;
+            $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
+            if ($methodAnnotations && isset($methodAnnotations[$annotationClass])) {
+                return $methodAnnotations[$annotationClass];
             }
         }
 
@@ -1219,46 +1222,5 @@ class RouteCollector
     {
         $routes = $this->collectRoutes();
         return array_unique(array_column($routes, 'path'));
-    }
-
-    /**
-     * 获取路由统计信息
-     */
-    public function getRouteStats(): array
-    {
-        $routes = $this->collectRoutes();
-        $stats = [
-            'total' => count($routes),
-            'methods' => [],
-            'controllers' => [],
-            'tags' => [],
-            'restful_count' => 0,
-            'custom_count' => 0,
-        ];
-
-        foreach ($routes as $route) {
-            // 统计HTTP方法
-            foreach ($route['methods'] as $method) {
-                $stats['methods'][$method] = ($stats['methods'][$method] ?? 0) + 1;
-            }
-
-            // 统计控制器
-            $controller = $route['controller'];
-            $stats['controllers'][$controller] = ($stats['controllers'][$controller] ?? 0) + 1;
-
-            // 统计标签
-            foreach ($route['tags'] as $tag) {
-                $stats['tags'][$tag] = ($stats['tags'][$tag] ?? 0) + 1;
-            }
-            
-            // 统计RESTful vs 自定义
-            if ($route['restful'] ?? false) {
-                $stats['restful_count']++;
-            } else {
-                $stats['custom_count']++;
-            }
-        }
-
-        return $stats;
     }
 } 

@@ -1,6 +1,15 @@
 {
   "name": "hyperf-plus/route",
   "type": "library",
+  "description": "HPlus 路由增强组件 - 提供强大的路由注解系统，支持自动路由注册和参数验证",
+  "keywords": [
+    "php",
+    "hyperf",
+    "hyperf-plus",
+    "route",
+    "annotation",
+    "api"
+  ],
   "license": "MIT",
   "authors": [
     {
@@ -8,25 +17,28 @@
       "email": "4213509@qq.com"
     }
   ],
-  "homepage": "https://github.com/lphkxd/hyperf-route",
-  "keywords": [
-    "php",
-    "hyperf"
-  ],
-  "description": "hyperf route",
-  "require": {
-    "php": ">=8.0",
-    "hyperf/framework": "~3.0.0"
+  "homepage": "https://github.com/lphkxd/hyperf-plus",
+  "support": {
+    "issues": "https://github.com/lphkxd/hyperf-plus/issues",
+    "source": "https://github.com/lphkxd/hyperf-plus/tree/main/route"
   },
-  "suggest": {
-    "ext-swoole": "Allows using @Value annotation",
-    "hyperf/framework": "Allows using @Value annotation"
+  "require": {
+    "php": ">=8.1",
+    "hyperf/config": "^3.1",
+    "hyperf/di": "^3.1.0",
+    "hyperf/framework": "^3.1.0",
+    "hyperf/http-server": "^3.1.0"
   },
   "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "mockery/mockery": "^1.5",
     "friendsofphp/php-cs-fixer": "^3.0",
-    "mockery/mockery": "^1.0",
-    "phpstan/phpstan": "^1.0",
-    "phpunit/phpunit": ">=7.0"
+    "phpstan/phpstan": "^1.10"
+  },
+  "suggest": {
+    "ext-swoole": "Required for Hyperf framework",
+    "hyperf-plus/validate": "For request validation support",
+    "hyperf-plus/swagger": "For API documentation generation"
   },
   "autoload": {
     "psr-4": {
@@ -35,25 +47,34 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "HPlus\\Route\\Tests\\": "tests"
+      "HPlus\\Route\\Tests\\": "tests/"
     }
   },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
+  "scripts": {
+    "test": "phpunit --colors=always",
+    "test-unit": "phpunit --colors=always tests/Unit",
+    "test-feature": "phpunit --colors=always tests/Feature",
+    "test-coverage": "phpunit --coverage-html coverage --coverage-text",
+    "test-performance": "phpunit --colors=always --group performance",
+    "test-docs": "phpunit --testdox",
+    "test-groups": "phpunit --list-groups",
+    "analyse": "phpstan analyse src --level 8",
+    "cs-fix": "php-cs-fixer fix src",
+    "quality": [
+      "@test",
+      "@analyse",
+      "@cs-fix"
+    ]
+  },
+  "extra": {
+    "hyperf": {
+      "config": "HPlus\\Route\\ConfigProvider"
+    }
+  },
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true
   },
-  "scripts": {
-    "test": "phpunit -c phpunit.xml --colors=always",
-    "analyse": "phpstan analyse --memory-limit 1024M -l 0 ./src",
-    "cs-fix": "php-cs-fixer fix $1"
-  },
-  "extra": {
-    "hyperf": {
-      "config": [
-        "HPlus\\Route\\ConfigProvider"
-      ]
-    }
-  }
+  "minimum-stability": "stable",
+  "prefer-stable": true
 }
