@@ -1,80 +1,99 @@
 {
-  "name": "hyperf-plus/route",
-  "type": "library",
-  "description": "HPlus 路由增强组件 - 提供强大的路由注解系统，支持自动路由注册和参数验证",
+  "name": "hyperf/hyperf-test",
+  "type": "project",
   "keywords": [
     "php",
     "hyperf",
-    "hyperf-plus",
-    "route",
-    "annotation",
-    "api"
+    "test"
   ],
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "毛自豪",
-      "email": "4213509@qq.com"
-    }
-  ],
-  "homepage": "https://github.com/lphkxd/hyperf-plus",
-  "support": {
-    "issues": "https://github.com/lphkxd/hyperf-plus/issues",
-    "source": "https://github.com/lphkxd/hyperf-plus/tree/main/route"
-  },
+  "description": "Hyperf test project",
+  "license": "Apache-2.0",
   "require": {
     "php": ">=8.1",
     "hyperf/config": "^3.1",
-    "hyperf/di": "^3.1.0",
-    "hyperf/framework": "^3.1.0",
-    "hyperf/http-server": "^3.1.0"
+    "hyperf/di": "^3.1",
+    "hyperf/framework": "^3.1",
+    "hyperf/http-server": "^3.1",
+    "hyperf/server": "^3.1",
+    "hyperf/command": "^3.1",
+    "hyperf/event": "^3.1",
+    "hyperf/logger": "^3.1",
+    "hyperf/cache": "^3.1",
+    "hyperf/database": "^3.1",
+    "hyperf/db-connection": "^3.1",
+    "hyperf/redis": "^3.1",
+    "hyperf/constants": "^3.1",
+    "hyperf/async-queue": "^3.1",
+    "hyperf/amqp": "^3.1",
+    "hyperf/model-cache": "^3.1",
+    "hyperf/json-rpc": "^3.1",
+    "hyperf/rpc-client": "^3.1",
+    "hyperf/rpc-server": "^3.1",
+    "hyperf/elasticsearch": "^3.1",
+    "hyperf/consul": "^3.1",
+    "hyperf/circuit-breaker": "^3.1",
+    "hyperf/rate-limit": "^3.1",
+    "hyperf/snowflake": "^3.1",
+    "hyperf/tracer": "^3.1",
+    "hyperf/swagger": "^3.1",
+    "hyperf/validation": "^3.1",
+    "hyperf/translation": "^3.1",
+    "hyperf/session": "^3.1",
+    "hyperf/view": "^3.1",
+    "hyperf/task": "^3.1",
+    "hyperf/crontab": "^3.1",
+    "hyperf/metric": "^3.1",
+    "hyperf/socketio-server": "^3.1",
+    "hyperf/watcher": "^3.1",
+    "hyperf/devtool": "^3.1",
+    "hyperf/testing": "^3.1",
+    "hplus/route": "^1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.0",
-    "mockery/mockery": "^1.5",
     "friendsofphp/php-cs-fixer": "^3.0",
-    "phpstan/phpstan": "^1.10"
+    "mockery/mockery": "^1.0",
+    "phpstan/phpstan": "^1.0",
+    "phpunit/phpunit": "^10.0",
+    "swoole/ide-helper": "^5.0"
   },
   "suggest": {
-    "ext-swoole": "Required for Hyperf framework",
-    "hyperf-plus/validate": "For request validation support",
-    "hyperf-plus/swagger": "For API documentation generation"
+    "ext-openssl": "Required to use HTTPS.",
+    "ext-json": "Required to use JSON.",
+    "ext-pdo": "Required to use MySQL Client.",
+    "ext-pdo_mysql": "Required to use MySQL Client.",
+    "ext-redis": "Required to use Redis Client."
   },
   "autoload": {
     "psr-4": {
-      "HPlus\\Route\\": "src/"
-    }
+      "App\\": "app/",
+      "HPlus\\Route\\": "packages/hyperf-plus/route/"
+    },
+    "files": []
   },
   "autoload-dev": {
     "psr-4": {
-      "HPlus\\Route\\Tests\\": "tests/"
+      "HyperfTest\\": "test/"
     }
   },
-  "scripts": {
-    "test": "phpunit --colors=always",
-    "test-unit": "phpunit --colors=always tests/Unit",
-    "test-feature": "phpunit --colors=always tests/Feature",
-    "test-coverage": "phpunit --coverage-html coverage --coverage-text",
-    "test-performance": "phpunit --colors=always --group performance",
-    "test-docs": "phpunit --testdox",
-    "test-groups": "phpunit --list-groups",
-    "analyse": "phpstan analyse src --level 8",
-    "cs-fix": "php-cs-fixer fix src",
-    "quality": [
-      "@test",
-      "@analyse",
-      "@cs-fix"
-    ]
-  },
-  "extra": {
-    "hyperf": {
-      "config": "HPlus\\Route\\ConfigProvider"
-    }
-  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true
   },
-  "minimum-stability": "stable",
-  "prefer-stable": true
+  "scripts": {
+    "post-root-package-install": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+    ],
+    "post-autoload-dump": [
+      "rm -rf runtime/container"
+    ],
+    "test": "phpunit -c phpunit.xml --colors=always",
+    "analyse": "phpstan analyse --memory-limit 1024M -l 0 -c phpstan.neon ./app ./config",
+    "cs-fix": "php-cs-fixer fix $1",
+    "start": [
+      "Composer\\Config::disableProcessTimeout",
+      "php ./bin/hyperf.php start"
+    ]
+  }
 }
