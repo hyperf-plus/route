@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  hyperf-app:
+    build: .
+    ports:
+      - "9501:9501"
+    volumes:
+      - .:/app
+    environment:
+      - APP_ENV=dev
+      - SCAN_CACHEABLE=false
+    working_dir: /app
+    command: php bin/hyperf.php start

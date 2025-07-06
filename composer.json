@@ -1,56 +1,36 @@
 {
-  "name": "hyperf/hyperf-test",
+  "name": "hyperf/hyperf-skeleton",
   "type": "project",
   "keywords": [
     "php",
+    "swoole",
+    "framework",
     "hyperf",
-    "test"
+    "microservice",
+    "middleware"
   ],
-  "description": "Hyperf test project",
+  "description": "A coroutine framework that focuses on hyperspeed and flexible, specifically use for build microservices and middlewares.",
   "license": "Apache-2.0",
   "require": {
     "php": ">=8.1",
-    "hyperf/config": "^3.1",
-    "hyperf/di": "^3.1",
-    "hyperf/framework": "^3.1",
-    "hyperf/http-server": "^3.1",
-    "hyperf/server": "^3.1",
-    "hyperf/command": "^3.1",
-    "hyperf/event": "^3.1",
-    "hyperf/logger": "^3.1",
-    "hyperf/cache": "^3.1",
-    "hyperf/database": "^3.1",
-    "hyperf/db-connection": "^3.1",
-    "hyperf/redis": "^3.1",
-    "hyperf/constants": "^3.1",
-    "hyperf/async-queue": "^3.1",
-    "hyperf/amqp": "^3.1",
-    "hyperf/model-cache": "^3.1",
-    "hyperf/json-rpc": "^3.1",
-    "hyperf/rpc-client": "^3.1",
-    "hyperf/rpc-server": "^3.1",
-    "hyperf/elasticsearch": "^3.1",
-    "hyperf/consul": "^3.1",
-    "hyperf/circuit-breaker": "^3.1",
-    "hyperf/rate-limit": "^3.1",
-    "hyperf/snowflake": "^3.1",
-    "hyperf/tracer": "^3.1",
-    "hyperf/swagger": "^3.1",
-    "hyperf/validation": "^3.1",
-    "hyperf/translation": "^3.1",
-    "hyperf/session": "^3.1",
-    "hyperf/view": "^3.1",
-    "hyperf/task": "^3.1",
-    "hyperf/crontab": "^3.1",
-    "hyperf/metric": "^3.1",
-    "hyperf/socketio-server": "^3.1",
-    "hyperf/watcher": "^3.1",
-    "hyperf/devtool": "^3.1",
-    "hyperf/testing": "^3.1",
-    "hplus/route": "^1.0"
+    "hyperf/cache": "~3.1.0",
+    "hyperf/command": "~3.1.0",
+    "hyperf/config": "~3.1.0",
+    "hyperf/db-connection": "~3.1.0",
+    "hyperf/framework": "~3.1.0",
+    "hyperf/guzzle": "~3.1.0",
+    "hyperf/http-server": "~3.1.0",
+    "hyperf/logger": "~3.1.0",
+    "hyperf/memory": "~3.1.0",
+    "hyperf/process": "~3.1.0",
+    "hyperf/redis": "~3.1.0",
+    "hyperf/di": "~3.1.0"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.0",
+    "hyperf/devtool": "~3.1.0",
+    "hyperf/ide-helper": "~3.1.0",
+    "hyperf/testing": "~3.1.0",
     "mockery/mockery": "^1.0",
     "phpstan/phpstan": "^1.0",
     "phpunit/phpunit": "^10.0",
@@ -66,7 +46,7 @@
   "autoload": {
     "psr-4": {
       "App\\": "app/",
-      "HPlus\\Route\\": "packages/hyperf-plus/route/"
+      "HPlus\\Route\\": "packages/hplus/route/"
     },
     "files": []
   },
@@ -80,6 +60,11 @@
   "config": {
     "optimize-autoloader": true,
     "sort-packages": true
+  },
+  "extra": {
+    "hyperf": {
+      "config": "App\\ConfigProvider"
+    }
   },
   "scripts": {
     "post-root-package-install": [

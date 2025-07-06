@@ -14,12 +14,12 @@ date_default_timezone_set('Asia/Shanghai');
 
 require BASE_PATH . '/vendor/autoload.php';
 
-$application = new Symfony\Component\Console\Application();
+// Self-called anonymous function that creates its own scope and keep the global namespace clean.
+(function () {
+    Hyperf\Di\ClassLoader::init();
+    /** @var \Psr\Container\ContainerInterface $container */
+    $container = require BASE_PATH . '/config/container.php';
 
-if (isset($GLOBALS['argv'][1]) && $GLOBALS['argv'][1] === 'start') {
-    $application->add(new Hyperf\Server\Command\StartServer());
-    $application->run(new Symfony\Component\Console\Input\ArgvInput(['', 'start']));
-} else {
-    $application->add(new Hyperf\Server\Command\StartServer());
+    $application = $container->get(\Hyperf\Contract\ApplicationInterface::class);
     $application->run();
-}
+})();

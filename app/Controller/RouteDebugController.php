@@ -7,102 +7,120 @@ namespace App\Controller;
 use HPlus\Route\Annotation\ApiController;
 use HPlus\Route\Annotation\GetApi;
 use HPlus\Route\RouteCollector;
+use Psr\Container\ContainerInterface;
 
 #[ApiController(prefix: '/debug', description: '路由调试控制器')]
 class RouteDebugController
 {
-    #[GetApi(path: '/routes', summary: '获取所有路由信息')]
+    public function __construct(
+        private ContainerInterface $container
+    ) {
+    }
+
+    #[GetApi(path: '/routes', summary: '获取所有HPlus Route注解路由')]
     public function routes(): array
     {
-        $collector = RouteCollector::getInstance();
-        $routes = $collector->collectRoutes();
-        
-        return [
-            'code' => 200,
-            'message' => '路由信息获取成功',
-            'data' => [
-                'total_routes' => count($routes),
-                'routes' => $routes,
-                'php_version' => PHP_VERSION,
-                'php_version_id' => PHP_VERSION_ID,
-                'attributes_supported' => PHP_VERSION_ID >= 80000,
-            ]
-        ];
+        try {
+            $collector = $this->container->get(RouteCollector::class);
+            $routes = $collector->collectRoutes();
+            
+            return [
+                'code' => 200,
+                'message' => 'HPlus Route注解路由信息获取成功',
+                'data' => [
+                    'total_routes' => count($routes),
+                    'routes' => $routes,
+                    'collector_class' => get_class($collector),
+                    'environment' => [
+                        'php_version' => PHP_VERSION,
+                        'php_version_id' => PHP_VERSION_ID,
+                        'attributes_supported' => PHP_VERSION_ID >= 80000,
+                        'swoole_version' => defined('SWOOLE_VERSION') ? SWOOLE_VERSION : 'not installed'
+                    ]
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'code' => 500,
+                'message' => '获取路由信息失败：' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ];
+        }
     }
 
-    #[GetApi(path: '/routes/stats', summary: '获取路由统计信息')]
-    public function stats(): array
+    #[GetApi(path: '/route/{controller}', summary: '获取指定控制器的路由')]
+    public function controllerRoutes(string $controller): array
     {
-        $collector = RouteCollector::getInstance();
-        $routes = $collector->collectRoutes();
-        
-        $stats = [
-            'total_routes' => count($routes),
-            'controllers' => [],
-            'methods' => [],
-            'paths' => [],
-        ];
-
-        foreach ($routes as $route) {
-            // 统计控制器
-            if (!isset($stats['controllers'][$route['controller']])) {
-                $stats['controllers'][$route['controller']] = 0;
+        try {
+            $collector = $this->container->get(RouteCollector::class);
+            $controllerClass = "App\\Controller\\{$controller}Controller";
+            
+            if (!class_exists($controllerClass)) {
+                return [
+                    'code' => 404,
+                    'message' => "控制器 {$controllerClass} 不存在"
+                ];
             }
-            $stats['controllers'][$route['controller']]++;
+            
+            $routes = $collector->getControllerRoutes($controllerClass);
+            
+            return [
+                'code' => 200,
+                'message' => "控制器 {$controllerClass} 的路由信息",
+                'data' => [
+                    'controller' => $controllerClass,
+                    'route_count' => count($routes),
+                    'routes' => $routes
+                ]
+            ];
+        } catch (\Exception $e) {
+            return [
+                'code' => 500,
+                'message' => '获取控制器路由信息失败：' . $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ];
+        }
+    }
 
-            // 统计HTTP方法
-            foreach ($route['methods'] as $method) {
-                if (!isset($stats['methods'][$method])) {
-                    $stats['methods'][$method] = 0;
+    #[GetApi(path: '/annotations', summary: '测试属性注解扫描')]
+    public function testAnnotations(): array
+    {
+        $testResults = [];
+        
+        // 测试 ApiController 注解
+        $reflectionClass = new \ReflectionClass(ApiTestController::class);
+        $classAttributes = $reflectionClass->getAttributes();
+        
+        foreach ($classAttributes as $attribute) {
+            $testResults['class_annotations'][] = [
+                'name' => $attribute->getName(),
+                'arguments' => $attribute->getArguments()
+            ];
+        }
+        
+        // 测试方法注解
+        $methods = $reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+        foreach ($methods as $method) {
+            $methodAttributes = $method->getAttributes();
+            if (!empty($methodAttributes)) {
+                foreach ($methodAttributes as $attribute) {
+                    $testResults['method_annotations'][$method->getName()][] = [
+                        'name' => $attribute->getName(),
+                        'arguments' => $attribute->getArguments()
+                    ];
                 }
-                $stats['methods'][$method]++;
-            }
-
-            // 统计路径
-            $stats['paths'][] = $route['path'];
-        }
-
-        return [
-            'code' => 200,
-            'message' => '路由统计信息获取成功',
-            'data' => $stats
-        ];
-    }
-
-    #[GetApi(path: '/routes/test', summary: '测试路由收集功能')]
-    public function test(): array
-    {
-        $collector = RouteCollector::getInstance();
-        
-        // 清除缓存
-        $collector->clearCache();
-        
-        // 重新收集路由
-        $routes = $collector->collectRoutes();
-        
-        $testResults = [
-            'cache_cleared' => true,
-            'routes_collected' => count($routes),
-            'test_controller_routes' => 0,
-            'user_controller_routes' => 0,
-            'annotations_working' => false,
-        ];
-
-        foreach ($routes as $route) {
-            if ($route['controller'] === 'App\\Controller\\TestController') {
-                $testResults['test_controller_routes']++;
-            }
-            if ($route['controller'] === 'App\\Controller\\UserController') {
-                $testResults['user_controller_routes']++;
             }
         }
-
-        $testResults['annotations_working'] = $testResults['test_controller_routes'] > 0 || $testResults['user_controller_routes'] > 0;
-
+        
         return [
             'code' => 200,
-            'message' => '路由收集测试完成',
-            'data' => $testResults
+            'message' => 'PHP 8+ 属性注解扫描测试结果',
+            'data' => [
+                'test_class' => ApiTestController::class,
+                'annotation_scan_results' => $testResults,
+                'php_version' => PHP_VERSION,
+                'reflection_api_available' => method_exists(\ReflectionClass::class, 'getAttributes')
+            ]
         ];
     }
 }
