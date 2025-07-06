@@ -206,8 +206,8 @@ class RouteCollector
 
         $routes = [];
         
-        // 批量获取所有ApiController注解的类
-        $controllers = AnnotationCollector::getClassesByAnnotation(ApiController::class);
+        // 获取所有ApiController注解的类
+        $controllers = $this->getApiControllerClasses();
         
         // 批量处理控制器
         foreach ($controllers as $className => $controllerAnnotation) {
@@ -1115,6 +1115,44 @@ class RouteCollector
     }
 
     /**
+     * 获取所有带有 ApiController 注解的类
+     */
+    private function getApiControllerClasses(): array
+    {
+        $controllers = [];
+        
+        // 优先使用 AnnotationCollector（支持 Doctrine 风格注解）
+        $annotationControllers = AnnotationCollector::getClassesByAnnotation(ApiController::class);
+        foreach ($annotationControllers as $className => $controllerAnnotation) {
+            $controllers[$className] = $controllerAnnotation;
+        }
+        
+        // 如果使用 PHP 8+ 属性注解，扫描已加载的类
+        if (PHP_VERSION_ID >= 80000) {
+            $declaredClasses = get_declared_classes();
+            foreach ($declaredClasses as $className) {
+                if (isset($controllers[$className])) {
+                    continue; // 已经通过 AnnotationCollector 获取
+                }
+                
+                try {
+                    $reflection = new ReflectionClass($className);
+                    $attributes = $reflection->getAttributes(ApiController::class);
+                    
+                    if (!empty($attributes)) {
+                        $controllers[$className] = $attributes[0]->newInstance();
+                    }
+                } catch (\ReflectionException $e) {
+                    // 忽略无法反射的类
+                    continue;
+                }
+            }
+        }
+        
+        return $controllers;
+    }
+
+    /**
      * 获取路由注解
      */
     private function getRouteAnnotation(ReflectionMethod $method): ?Mapping
@@ -1127,6 +1165,18 @@ class RouteCollector
         $className = $method->getDeclaringClass()->getName();
         $methodName = $method->getName();
 
+        // 优先使用PHP 8+ 属性注解
+        if (PHP_VERSION_ID >= 80000) {
+            $attributes = $method->getAttributes();
+            foreach ($attributes as $attribute) {
+                $attributeClass = $attribute->getName();
+                if (in_array($attributeClass, $routeAnnotations)) {
+                    return $attribute->newInstance();
+                }
+            }
+        }
+
+        // 回退到 AnnotationCollector（支持 Doctrine 风格注解）
         foreach ($routeAnnotations as $annotationClass) {
             $methodAnnotations = AnnotationCollector::getClassMethodAnnotation($className, $methodName);
             if ($methodAnnotations && isset($methodAnnotations[$annotationClass])) {
@@ -1206,13 +1256,36 @@ class RouteCollector
      */
     public function getControllerRoutes(string $controllerClass): array
     {
-        $controllerAnnotation = AnnotationCollector::getClassAnnotation($controllerClass, ApiController::class);
+        $controllerAnnotation = $this->getControllerAnnotation($controllerClass);
         
         if (!$controllerAnnotation) {
             return [];
         }
 
         return $this->getControllerRoutesWithCache($controllerClass, $controllerAnnotation);
+    }
+
+    /**
+     * 获取控制器注解
+     */
+    private function getControllerAnnotation(string $controllerClass): ?ApiController
+    {
+        // 优先使用 PHP 8+ 属性注解
+        if (PHP_VERSION_ID >= 80000) {
+            try {
+                $reflection = new ReflectionClass($controllerClass);
+                $attributes = $reflection->getAttributes(ApiController::class);
+                
+                if (!empty($attributes)) {
+                    return $attributes[0]->newInstance();
+                }
+            } catch (\ReflectionException $e) {
+                // 忽略无法反射的类
+            }
+        }
+
+        // 回退到 AnnotationCollector（支持 Doctrine 风格注解）
+        return AnnotationCollector::getClassAnnotation($controllerClass, ApiController::class);
     }
 
     /**
