@@ -11,116 +11,14 @@ namespace HPlus\Route\Utils;
 class RouteHelper
 {
     /**
-     * RESTful方法映射规则
-     * [方法名 => [HTTP方法期望, 路径模板]]
+     * 核心RESTful映射规则（只保留标准的5个操作）
      */
     public static array $restfulMapping = [
-        // 列表操作
-        'index' => ['GET', ''],
-        'list' => ['GET', ''],
-        'getList' => ['GET', ''],
-        
-        // 详情操作
-        'show' => ['GET', '/{id}'],
-        'detail' => ['GET', '/{id}'],
-        'getDetail' => ['GET', '/{id}'],
-        'get' => ['GET', '/{id}'],
-        
-        // 创建操作
-        'create' => ['POST', ''],
-        'store' => ['POST', ''],
-        'add' => ['POST', ''],
-        'post' => ['POST', ''],
-        
-        // 更新操作
-        'update' => ['PUT', '/{id}'],
-        'edit' => ['PUT', '/{id}'],
-        'modify' => ['PUT', '/{id}'],
-        'put' => ['PUT', '/{id}'],
-        'patch' => ['PATCH', '/{id}'],
-        
-        // 删除操作
-        'delete' => ['DELETE', '/{id}'],
-        'destroy' => ['DELETE', '/{id}'],
-        'remove' => ['DELETE', '/{id}'],
-        
-        // 批量操作
-        'batch' => ['POST', '/batch'],
-        'batchUpdate' => ['PUT', '/batch'],
-        'batchDelete' => ['DELETE', '/batch'],
-        
-        // 搜索操作
-        'search' => ['GET', '/search'],
-        'query' => ['GET', '/query'],
-        'filter' => ['GET', '/filter'],
-        
-        // 导入导出
-        'export' => ['GET', '/export'],
-        'import' => ['POST', '/import'],
-        'upload' => ['POST', '/upload'],
-        'download' => ['GET', '/download/{id}'],
-        
-        // 当前用户相关操作
-        'currentUser' => ['GET', '/current'],
-        'getCurrentUser' => ['GET', '/current'],
-        'current' => ['GET', '/current'],
-        'me' => ['GET', '/me'],
-        'profile' => ['GET', '/profile'],
-        'self' => ['GET', '/me'],
-    ];
-
-    /**
-     * 资源子操作映射规则
-     * 这些方法会生成 /{id}/action 格式的路径
-     */
-    public static array $resourceActionMapping = [
-        // 状态操作
-        'state' => ['GET', '/{id}/state'],
-        'status' => ['GET', '/{id}/status'],
-        'enable' => ['POST', '/{id}/enable'],
-        'disable' => ['POST', '/{id}/disable'],
-        'activate' => ['POST', '/{id}/activate'],
-        'deactivate' => ['POST', '/{id}/deactivate'],
-        
-        // 关系操作
-        'relationships' => ['GET', '/{id}/relationships'],
-        'relations' => ['GET', '/{id}/relations'],
-        'children' => ['GET', '/{id}/children'],
-        'parent' => ['GET', '/{id}/parent'],
-        
-        // 动作操作
-        'lock' => ['POST', '/{id}/lock'],
-        'unlock' => ['POST', '/{id}/unlock'],
-        'publish' => ['POST', '/{id}/publish'],
-        'unpublish' => ['POST', '/{id}/unpublish'],
-        'archive' => ['POST', '/{id}/archive'],
-        'restore' => ['POST', '/{id}/restore'],
-        'clone' => ['POST', '/{id}/clone'],
-        'duplicate' => ['POST', '/{id}/duplicate'],
-        
-        // 审核操作
-        'approve' => ['POST', '/{id}/approve'],
-        'reject' => ['POST', '/{id}/reject'],
-        'review' => ['GET', '/{id}/review'],
-        'audit' => ['GET', '/{id}/audit'],
-        
-        // 统计操作
-        'stats' => ['GET', '/{id}/stats'],
-        'statistics' => ['GET', '/{id}/statistics'],
-        'metrics' => ['GET', '/{id}/metrics'],
-        'analytics' => ['GET', '/{id}/analytics'],
-        
-        // 历史操作
-        'history' => ['GET', '/{id}/history'],
-        'logs' => ['GET', '/{id}/logs'],
-        'versions' => ['GET', '/{id}/versions'],
-        'revisions' => ['GET', '/{id}/revisions'],
-        
-        // 权限操作
-        'permissions' => ['GET', '/{id}/permissions'],
-        'roles' => ['GET', '/{id}/roles'],
-        'share' => ['POST', '/{id}/share'],
-        'unshare' => ['POST', '/{id}/unshare'],
+        'index' => ['GET', ''],      // 列表
+        'show' => ['GET', '/{id}'],  // 详情
+        'store' => ['POST', ''],     // 创建
+        'update' => ['PUT', '/{id}'], // 更新
+        'destroy' => ['DELETE', '/{id}'], // 删除
     ];
 
     /**
@@ -180,19 +78,11 @@ class RouteHelper
     }
 
     /**
-     * 检查是否为RESTful标准方法
+     * 获取RESTful路径模板（基于方法参数智能生成）
      */
-    public static function isRestfulMethod(string $methodName): bool
+    public static function getRestfulPath(string $methodName, string $httpMethod, ?\ReflectionMethod $method = null): ?string
     {
-        return isset(self::$restfulMapping[$methodName]) || isset(self::$resourceActionMapping[$methodName]);
-    }
-
-    /**
-     * 获取RESTful路径模板
-     */
-    public static function getRestfulPath(string $methodName, string $httpMethod): ?string
-    {
-        // 检查标准RESTful映射
+        // 1. 检查标准RESTful映射
         if (isset(self::$restfulMapping[$methodName])) {
             [$expectedMethod, $pathTemplate] = self::$restfulMapping[$methodName];
             
@@ -201,16 +91,84 @@ class RouteHelper
             }
         }
         
-        // 检查资源子操作映射
-        if (isset(self::$resourceActionMapping[$methodName])) {
-            [$expectedMethod, $pathTemplate] = self::$resourceActionMapping[$methodName];
-            
-            if (strtoupper($httpMethod) === $expectedMethod) {
-                return $pathTemplate;
+        // 2. 智能生成基于参数的路径
+        if ($method !== null) {
+            $smartPath = self::generateSmartPathFromParams($methodName, $method);
+            if ($smartPath !== null) {
+                return $smartPath;
             }
         }
         
-        return null;
+        // 3. 自动转换（默认规则）
+        return '/' . self::camelToKebab($methodName);
+    }
+
+    /**
+     * 基于方法参数智能生成路径
+     * 
+     * 规则：
+     * - function method($id) → /{id}/method
+     * - function method($name) → /{name}/method  
+     * - function method($id, $xxxx) → /{id}/{xxxx}/method
+     * - function method($userId, $postId) → /{userId}/{postId}/method
+     */
+    public static function generateSmartPathFromParams(string $methodName, \ReflectionMethod $method): ?string
+    {
+        $parameters = $method->getParameters();
+        $pathParams = [];
+        
+        // 提取所有简单类型参数作为路径参数
+        foreach ($parameters as $param) {
+            if (self::isPathParameter($param)) {
+                $pathParams[] = $param->getName();
+            }
+        }
+        
+        // 没有路径参数，使用普通路径
+        if (empty($pathParams)) {
+            return null;
+        }
+        
+        // 有路径参数，生成 /{param1}/{param2}/method 格式
+        $pathSegments = array_map(fn($param) => '{' . $param . '}', $pathParams);
+        $pathSegments[] = self::camelToKebab($methodName);
+        
+        return '/' . implode('/', $pathSegments);
+    }
+
+    /**
+     * 判断是否为路径参数
+     */
+    private static function isPathParameter(\ReflectionParameter $param): bool
+    {
+        $type = $param->getType();
+        
+        // 无类型或非内置类型，不作为路径参数
+        if (!$type || !$type instanceof \ReflectionNamedType || !$type->isBuiltin()) {
+            return false;
+        }
+        
+        $typeName = $type->getName();
+        
+        // 只有 int 和 string 作为路径参数
+        return in_array($typeName, ['int', 'string']);
+    }
+
+    /**
+     * 规范化路径
+     */
+    public static function normalizePath(string $path): string
+    {
+        $path = '/' . trim($path, '/');
+        return $path === '/' ? '/' : rtrim($path, '/');
+    }
+
+    /**
+     * 检查是否为RESTful标准方法
+     */
+    public static function isRestfulMethod(string $methodName): bool
+    {
+        return isset(self::$restfulMapping[$methodName]);
     }
 
     /**
@@ -250,14 +208,5 @@ class RouteHelper
         $prefix .= '/' . $resourceName;
         
         return self::normalizePath($prefix);
-    }
-
-    /**
-     * 规范化路径
-     */
-    public static function normalizePath(string $path): string
-    {
-        $path = '/' . trim($path, '/');
-        return $path === '/' ? '/' : rtrim($path, '/');
     }
 } 

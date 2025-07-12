@@ -79,7 +79,7 @@ class DispatcherFactory extends Dispatcher
                     $methodOptions['middleware'] = $options['middleware'];
                     if (!isset($mapping->path)) {
                         // 使用 RESTful 规则生成路径
-                        $path = $this->getRestfulPath($methodName, $mapping->methods[0] ?? 'GET', $prefix);
+                        $path = $this->getRestfulPath($methodName, $mapping->methods[0] ?? 'GET', $prefix, $className);
                     } elseif ($mapping->path === '') {
                         $path = $prefix;
                     } elseif ($mapping->path[0] !== '/') {
@@ -164,12 +164,20 @@ class DispatcherFactory extends Dispatcher
     }
 
     /**
-     * 根据 RESTful 规则生成路径
+     * 根据 RESTful 规则生成路径（支持基于参数的智能生成）
      */
-    private function getRestfulPath(string $methodName, string $httpMethod, string $prefix): string
+    private function getRestfulPath(string $methodName, string $httpMethod, string $prefix, string $className): string
     {
-        // 使用工具类获取RESTful路径
-        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod);
+        // 创建反射方法以获取参数信息
+        $reflectionMethod = null;
+        try {
+            $reflectionMethod = new \ReflectionMethod($className, $methodName);
+        } catch (\ReflectionException $e) {
+            // 如果获取反射失败，继续使用基本逻辑
+        }
+        
+        // 使用工具类获取RESTful路径（传递反射方法）
+        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod, $reflectionMethod);
         
         if ($pathTemplate !== null) {
             return $prefix . $pathTemplate;

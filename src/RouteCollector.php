@@ -262,15 +262,15 @@ class RouteCollector
     /**
      * 获取路由路径（用户设置优先，否则RESTful规则）
      */
-    private function getRoutePath(string $methodName, string $httpMethod, Mapping $routeAnnotation): string
+    private function getRoutePath(string $methodName, string $httpMethod, Mapping $routeAnnotation, ?\ReflectionMethod $method = null): string
     {
         // 用户设置优先
         if (isset($routeAnnotation->path)) {
             return $routeAnnotation->path;
         }
 
-        // 使用工具类获取RESTful路径
-        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod);
+        // 使用工具类获取RESTful路径（传递反射方法）
+        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod, $method);
         
         if ($pathTemplate !== null) {
             return $pathTemplate;
@@ -294,8 +294,8 @@ class RouteCollector
             return $routeAnnotation->path;
         }
 
-        // 使用工具类获取RESTful路径
-        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod);
+        // 使用工具类获取RESTful路径（传递反射方法）
+        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod, $method);
         
         if ($pathTemplate !== null) {
             return $pathTemplate;
