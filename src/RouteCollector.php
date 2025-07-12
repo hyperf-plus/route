@@ -582,8 +582,11 @@ class RouteCollector
      */
     private function lazyLoadRouteDetails(array $routeInfo, ReflectionMethod $method): array
     {
-        // 使用闭包实现懒加载
-        $routeInfo['_lazy_parameters'] = fn() => $this->extractParameters($method);
+        // 从路由信息中获取HTTP方法
+        $httpMethod = $routeInfo['methods'][0] ?? 'GET';
+        
+        // 使用闭包实现懒加载，传递HTTP方法
+        $routeInfo['_lazy_parameters'] = fn() => $this->extractParameters($method, $httpMethod);
         $routeInfo['_lazy_request_body'] = fn() => $this->extractRequestBody($method);
         
         return $routeInfo;
@@ -630,7 +633,7 @@ class RouteCollector
     /**
      * 提取参数信息
      */
-    private function extractParameters(ReflectionMethod $method): array
+    private function extractParameters(ReflectionMethod $method, string $httpMethod = 'GET'): array
     {
         $parameters = [];
         
@@ -666,7 +669,7 @@ class RouteCollector
             }
 
             if ($validation && !empty($validation->rules)) {
-                $parameters = array_merge($parameters, $this->extractValidationParameters($validation));
+                $parameters = array_merge($parameters, $this->extractValidationParameters($validation, $httpMethod));
             }
         }
 
@@ -697,7 +700,7 @@ class RouteCollector
     /**
      * 从验证注解提取参数
      */
-    private function extractValidationParameters(RequestValidation $validation): array
+    private function extractValidationParameters(RequestValidation $validation, string $httpMethod = 'GET'): array
     {
         $parameters = [];
         
@@ -713,8 +716,8 @@ class RouteCollector
                 $nullable = str_contains($rule, 'nullable');
             }
             
-            // 根据验证类型确定参数位置
-            $paramType = ($validation->dateType === 'json') ? 'body' : 'query';
+            // 根据HTTP方法和验证类型确定参数位置
+            $paramType = $this->determineParameterType($httpMethod, $validation->dataType);
             
             if ($paramType === 'query') {
                 $parameters[] = [
@@ -869,7 +872,7 @@ class RouteCollector
             $validation = $methodAnnotations[RequestValidation::class];
         }
 
-        if (!$validation || empty($validation->rules) || $validation->dateType !== 'json') {
+        if (!$validation || empty($validation->rules) || $validation->dataType !== 'json') {
             return null;
         }
 
@@ -986,6 +989,26 @@ class RouteCollector
         return [$field, ''];
     }
 
+    /**
+     * 根据HTTP方法和数据类型确定参数位置
+     */
+    private function determineParameterType(string $httpMethod, string $dataType): string
+    {
+        $method = strtoupper($httpMethod);
+        
+        // GET和DELETE请求：参数始终在query中
+        if (in_array($method, ['GET', 'DELETE'])) {
+            return 'query';
+        }
+        
+        // POST、PUT、PATCH请求：根据dataType决定
+        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            return ($dataType === 'json') ? 'body' : 'query';
+        }
+        
+        // 其他情况默认query
+        return 'query';
+    }
 
 
     /**
