@@ -10,6 +10,7 @@ use HPlus\Route\Annotation\GetApi;
 use HPlus\Route\Annotation\PatchApi;
 use HPlus\Route\Annotation\PostApi;
 use HPlus\Route\Annotation\PutApi;
+use HPlus\Route\Utils\RouteHelper;
 use Hyperf\Collection\Arr;
 use Hyperf\Di\Exception\ConflictAnnotationException;
 use Hyperf\HttpServer\Annotation\AutoController;
@@ -102,14 +103,14 @@ class DispatcherFactory extends Dispatcher
         if (!$prefix) {
             $handledNamespace = Str::replaceFirst('Controller', '', Str::after($className, '\Controller\\'));
             $handledNamespace = str_replace('\\', '/', $service . "\\" . $handledNamespace);
-            $prefix = $this->camelToKebab($handledNamespace);
+            $prefix = RouteHelper::camelToKebab($handledNamespace);
             $prefix = str_replace('/-', '/', $prefix);
             
             // RESTful 风格：转换为复数形式
             $parts = explode('/', $prefix);
             $lastPart = array_pop($parts);
             if ($lastPart) {
-                $lastPart = $this->pluralize($lastPart);
+                $lastPart = RouteHelper::pluralize($lastPart);
                 $parts[] = $lastPart;
             }
             $prefix = implode('/', $parts);
@@ -167,98 +168,17 @@ class DispatcherFactory extends Dispatcher
      */
     private function getRestfulPath(string $methodName, string $httpMethod, string $prefix): string
     {
-        // RESTful 方法映射规则
-        $restfulMapping = [
-            // 列表操作
-            'index' => ['GET', ''],
-            'list' => ['GET', ''],
-            
-            // 详情操作
-            'show' => ['GET', '/{id}'],
-            'detail' => ['GET', '/{id}'],
-            'get' => ['GET', '/{id}'],
-            
-            // 创建操作
-            'create' => ['POST', ''],
-            'store' => ['POST', ''],
-            'add' => ['POST', ''],
-            
-            // 更新操作
-            'update' => ['PUT', '/{id}'],
-            'edit' => ['PUT', '/{id}'],
-            'modify' => ['PUT', '/{id}'],
-            'patch' => ['PATCH', '/{id}'],
-            
-            // 删除操作
-            'delete' => ['DELETE', '/{id}'],
-            'destroy' => ['DELETE', '/{id}'],
-            'remove' => ['DELETE', '/{id}'],
-        ];
-
-        // 检查是否符合 RESTful 映射
-        if (isset($restfulMapping[$methodName])) {
-            [$expectedMethod, $pathTemplate] = $restfulMapping[$methodName];
-            
-            // 如果 HTTP 方法匹配，使用 RESTful 路径模板
-            if (strtoupper($httpMethod) === $expectedMethod) {
-                return $prefix . $pathTemplate;
-            }
+        // 使用工具类获取RESTful路径
+        $pathTemplate = RouteHelper::getRestfulPath($methodName, $httpMethod);
+        
+        if ($pathTemplate !== null) {
+            return $prefix . $pathTemplate;
         }
 
         // 默认：方法名转路径（驼峰转中划线）
-        return $prefix . '/' . $this->camelToKebab($methodName);
+        return $prefix . '/' . RouteHelper::camelToKebab($methodName);
     }
 
-    /**
-     * 驼峰转中划线
-     * currentUser -> current-user
-     */
-    private function camelToKebab(string $str): string
-    {
-        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $str));
-    }
 
-    /**
-     * 将单词转换为复数形式（简单规则）
-     */
-    private function pluralize(string $word): string
-    {
-        // 常见不规则复数
-        $irregular = [
-            'person' => 'people',
-            'child' => 'children',
-            'man' => 'men',
-            'woman' => 'women',
-            'tooth' => 'teeth',
-            'foot' => 'feet',
-            'mouse' => 'mice',
-            'goose' => 'geese',
-        ];
-
-        $lowerWord = strtolower($word);
-        
-        // 检查不规则复数
-        if (isset($irregular[$lowerWord])) {
-            return $irregular[$lowerWord];
-        }
-
-        // 已经是复数形式
-        if (str_ends_with($word, 's') || str_ends_with($word, 'es')) {
-            return $word;
-        }
-
-        // 应用常见规则
-        if (str_ends_with($word, 'y') && !in_array(substr($word, -2, 1), ['a', 'e', 'i', 'o', 'u'])) {
-            return substr($word, 0, -1) . 'ies';
-        }
-
-        if (str_ends_with($word, 's') || str_ends_with($word, 'x') || 
-            str_ends_with($word, 'z') || str_ends_with($word, 'ch') || 
-            str_ends_with($word, 'sh')) {
-            return $word . 'es';
-        }
-
-        return $word . 's';
-    }
 
 }
