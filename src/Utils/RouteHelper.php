@@ -19,6 +19,7 @@ class RouteHelper
         'store' => ['POST', ''],     // 创建
         'update' => ['PUT', '/{id}'], // 更新
         'destroy' => ['DELETE', '/{id}'], // 删除
+        'delete' => ['DELETE', '/{id}'], // 删除
     ];
 
     /**
