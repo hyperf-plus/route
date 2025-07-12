@@ -58,8 +58,11 @@ class DispatcherFactory extends Dispatcher
             DeleteApi::class,
             PatchApi::class,
         ];
-        foreach ($methodMetadata as $methodName => $values) {
 
+        // 收集所有路由信息
+        $routesToRegister = [];
+        
+        foreach ($methodMetadata as $methodName => $values) {
             $options = $annotation->options;
             $methodMiddlewares = $middlewares;
             // Handle method level middlewares.
@@ -92,9 +95,27 @@ class DispatcherFactory extends Dispatcher
                     if (!str_starts_with($path, '/')) {
                         $path = '/' . $path;
                     }
-                    $router->addRoute($mapping->methods, $path, [$className, $methodName], $methodOptions);
+
+                    // 收集路由信息而不是立即注册
+                    $routesToRegister[] = [
+                        'methods' => $mapping->methods,
+                        'path' => $path,
+                        'handler' => [$className, $methodName],
+                        'options' => $methodOptions,
+                        'priority' => RouteHelper::getRoutePriority($path),
+                    ];
                 }
             }
+        }
+
+        // 按优先级排序路由（静态路由优先）
+        usort($routesToRegister, function ($a, $b) {
+            return $b['priority'] <=> $a['priority'];
+        });
+
+        // 按排序后的顺序注册路由
+        foreach ($routesToRegister as $routeInfo) {
+            $router->addRoute($routeInfo['methods'], $routeInfo['path'], $routeInfo['handler'], $routeInfo['options']);
         }
     }
 

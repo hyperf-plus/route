@@ -222,4 +222,36 @@ class RouteHelper
         
         return self::normalizePath($prefix);
     }
+
+    /**
+     * 计算路由优先级（用于排序）
+     * 静态路由优先级高于动态路由
+     */
+    public static function getRoutePriority(string $path): int
+    {
+        // 静态路由（无参数）优先级最高
+        if (!str_contains($path, '{')) {
+            return 1000;
+        }
+        
+        // 动态路由按参数数量排序，参数越少优先级越高
+        $paramCount = substr_count($path, '{');
+        return 1000 - $paramCount * 100;
+    }
+
+    /**
+     * 检查路由是否为静态路由
+     */
+    public static function isStaticRoute(string $path): bool
+    {
+        return !str_contains($path, '{');
+    }
+
+    /**
+     * 检查路由是否为动态路由
+     */
+    public static function isDynamicRoute(string $path): bool
+    {
+        return str_contains($path, '{');
+    }
 } 
