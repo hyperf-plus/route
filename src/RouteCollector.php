@@ -587,7 +587,7 @@ class RouteCollector
         
         // 使用闭包实现懒加载，传递HTTP方法
         $routeInfo['_lazy_parameters'] = fn() => $this->extractParameters($method, $httpMethod);
-        $routeInfo['_lazy_request_body'] = fn() => $this->extractRequestBody($method);
+        $routeInfo['_lazy_request_body'] = fn() => $this->extractRequestBody($method, $httpMethod);
         
         return $routeInfo;
     }
@@ -857,9 +857,14 @@ class RouteCollector
     /**
      * 提取请求体信息
      */
-    private function extractRequestBody(ReflectionMethod $method): ?array
+    private function extractRequestBody(ReflectionMethod $method, string $httpMethod = 'GET'): ?array
     {
         if (!class_exists(RequestValidation::class)) {
+            return null;
+        }
+
+        // GET 和 DELETE 请求不应该有请求体
+        if (in_array(strtoupper($httpMethod), ['GET', 'DELETE'])) {
             return null;
         }
 
