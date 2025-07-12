@@ -107,10 +107,10 @@ class RouteHelper
      * 基于方法参数智能生成路径
      * 
      * 规则：
-     * - function method($id) → /{id}/method
+     * - function method($id) → /{id:\d+}/method
      * - function method($name) → /{name}/method  
-     * - function method($id, $xxxx) → /{id}/{xxxx}/method
-     * - function method($userId, $postId) → /{userId}/{postId}/method
+     * - function method($id, $xxxx) → /{id:\d+}/{xxxx}/method
+     * - function method($userId, $postId) → /{userId:\d+}/{postId:\d+}/method
      */
     public static function generateSmartPathFromParams(string $methodName, \ReflectionMethod $method): ?string
     {
@@ -120,7 +120,20 @@ class RouteHelper
         // 提取所有简单类型参数作为路径参数
         foreach ($parameters as $param) {
             if (self::isPathParameter($param)) {
-                $pathParams[] = $param->getName();
+                $paramName = $param->getName();
+                $paramType = $param->getType();
+                
+                // 根据参数类型添加正则约束
+                if ($paramType instanceof \ReflectionNamedType) {
+                    $typeName = $paramType->getName();
+                    if ($typeName === 'int') {
+                        $pathParams[] = $paramName . ':\d+';
+                    } else {
+                        $pathParams[] = $paramName;
+                    }
+                } else {
+                    $pathParams[] = $paramName;
+                }
             }
         }
         
