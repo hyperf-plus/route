@@ -82,10 +82,10 @@ class RouteCollector
         'getList' => ['GET', ''],
         
         // 详情操作
-        'show' => ['GET', '/{id}'],
-        'detail' => ['GET', '/{id}'],
-        'getDetail' => ['GET', '/{id}'],
-        'get' => ['GET', '/{id}'],
+        'show' => ['GET', '{id}'],
+        'detail' => ['GET', '{id}'],
+        'getDetail' => ['GET', '{id}'],
+        'get' => ['GET', '{id}'],
         
         // 创建操作
         'create' => ['POST', ''],
@@ -94,32 +94,32 @@ class RouteCollector
         'post' => ['POST', ''],
         
         // 更新操作
-        'update' => ['PUT', '/{id}'],
-        'edit' => ['PUT', '/{id}'],
-        'modify' => ['PUT', '/{id}'],
-        'put' => ['PUT', '/{id}'],
-        'patch' => ['PATCH', '/{id}'],
+        'update' => ['PUT', '{id}'],
+        'edit' => ['PUT', '{id}'],
+        'modify' => ['PUT', '{id}'],
+        'put' => ['PUT', '{id}'],
+        'patch' => ['PATCH', '{id}'],
         
         // 删除操作
-        'delete' => ['DELETE', '/{id}'],
-        'destroy' => ['DELETE', '/{id}'],
-        'remove' => ['DELETE', '/{id}'],
+        'delete' => ['DELETE', '{id}'],
+        'destroy' => ['DELETE', '{id}'],
+        'remove' => ['DELETE', '{id}'],
         
         // 批量操作（扩展）
-        'batch' => ['POST', '/batch'],
-        'batchUpdate' => ['PUT', '/batch'],
-        'batchDelete' => ['DELETE', '/batch'],
+        'batch' => ['POST', 'batch'],
+        'batchUpdate' => ['PUT', 'batch'],
+        'batchDelete' => ['DELETE', 'batch'],
         
         // 搜索操作（扩展）
-        'search' => ['GET', '/search'],
-        'query' => ['GET', '/query'],
-        'filter' => ['GET', '/filter'],
+        'search' => ['GET', 'search'],
+        'query' => ['GET', 'query'],
+        'filter' => ['GET', 'filter'],
         
         // 导入导出（扩展）
-        'export' => ['GET', '/export'],
-        'import' => ['POST', '/import'],
-        'upload' => ['POST', '/upload'],
-        'download' => ['GET', '/download/{id}'],
+        'export' => ['GET', 'export'],
+        'import' => ['POST', 'import'],
+        'upload' => ['POST', 'upload'],
+        'download' => ['GET', 'download/{id}'],
     ];
 
     /**
@@ -128,52 +128,52 @@ class RouteCollector
      */
     private array $resourceActionMapping = [
         // 状态操作
-        'state' => ['GET', '/{id}/state'],
-        'status' => ['GET', '/{id}/status'],
-        'enable' => ['POST', '/{id}/enable'],
-        'disable' => ['POST', '/{id}/disable'],
-        'activate' => ['POST', '/{id}/activate'],
-        'deactivate' => ['POST', '/{id}/deactivate'],
+        'state' => ['GET', '{id}/state'],
+        'status' => ['GET', '{id}/status'],
+        'enable' => ['POST', '{id}/enable'],
+        'disable' => ['POST', '{id}/disable'],
+        'activate' => ['POST', '{id}/activate'],
+        'deactivate' => ['POST', '{id}/deactivate'],
         
         // 关系操作
-        'relationships' => ['GET', '/{id}/relationships'],
-        'relations' => ['GET', '/{id}/relations'],
-        'children' => ['GET', '/{id}/children'],
-        'parent' => ['GET', '/{id}/parent'],
+        'relationships' => ['GET', '{id}/relationships'],
+        'relations' => ['GET', '{id}/relations'],
+        'children' => ['GET', '{id}/children'],
+        'parent' => ['GET', '{id}/parent'],
         
         // 动作操作
-        'lock' => ['POST', '/{id}/lock'],
-        'unlock' => ['POST', '/{id}/unlock'],
-        'publish' => ['POST', '/{id}/publish'],
-        'unpublish' => ['POST', '/{id}/unpublish'],
-        'archive' => ['POST', '/{id}/archive'],
-        'restore' => ['POST', '/{id}/restore'],
-        'clone' => ['POST', '/{id}/clone'],
-        'duplicate' => ['POST', '/{id}/duplicate'],
+        'lock' => ['POST', '{id}/lock'],
+        'unlock' => ['POST', '{id}/unlock'],
+        'publish' => ['POST', '{id}/publish'],
+        'unpublish' => ['POST', '{id}/unpublish'],
+        'archive' => ['POST', '{id}/archive'],
+        'restore' => ['POST', '{id}/restore'],
+        'clone' => ['POST', '{id}/clone'],
+        'duplicate' => ['POST', '{id}/duplicate'],
         
         // 审核操作
-        'approve' => ['POST', '/{id}/approve'],
-        'reject' => ['POST', '/{id}/reject'],
-        'review' => ['GET', '/{id}/review'],
-        'audit' => ['GET', '/{id}/audit'],
+        'approve' => ['POST', '{id}/approve'],
+        'reject' => ['POST', '{id}/reject'],
+        'review' => ['GET', '{id}/review'],
+        'audit' => ['GET', '{id}/audit'],
         
         // 统计操作
-        'stats' => ['GET', '/{id}/stats'],
-        'statistics' => ['GET', '/{id}/statistics'],
-        'metrics' => ['GET', '/{id}/metrics'],
-        'analytics' => ['GET', '/{id}/analytics'],
+        'stats' => ['GET', '{id}/stats'],
+        'statistics' => ['GET', '{id}/statistics'],
+        'metrics' => ['GET', '{id}/metrics'],
+        'analytics' => ['GET', '{id}/analytics'],
         
         // 历史操作
-        'history' => ['GET', '/{id}/history'],
-        'logs' => ['GET', '/{id}/logs'],
-        'versions' => ['GET', '/{id}/versions'],
-        'revisions' => ['GET', '/{id}/revisions'],
+        'history' => ['GET', '{id}/history'],
+        'logs' => ['GET', '{id}/logs'],
+        'versions' => ['GET', '{id}/versions'],
+        'revisions' => ['GET', '{id}/revisions'],
         
         // 权限操作
-        'permissions' => ['GET', '/{id}/permissions'],
-        'roles' => ['GET', '/{id}/roles'],
-        'share' => ['POST', '/{id}/share'],
-        'unshare' => ['POST', '/{id}/unshare'],
+        'permissions' => ['GET', '{id}/permissions'],
+        'roles' => ['GET', '{id}/roles'],
+        'share' => ['POST', '{id}/share'],
+        'unshare' => ['POST', '{id}/unshare'],
     ];
 
     /**

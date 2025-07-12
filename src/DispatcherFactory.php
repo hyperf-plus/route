@@ -102,8 +102,8 @@ class DispatcherFactory extends Dispatcher
         if (!$prefix) {
             $handledNamespace = Str::replaceFirst('Controller', '', Str::after($className, '\Controller\\'));
             $handledNamespace = str_replace('\\', '/', $service . "\\" . $handledNamespace);
-            $prefix = Str::snake($handledNamespace);
-            $prefix = str_replace('/_', '/', $prefix);
+            $prefix = $this->camelToKebab($handledNamespace);
+            $prefix = str_replace('/-', '/', $prefix);
             
             // RESTful 风格：转换为复数形式
             $parts = explode('/', $prefix);
@@ -205,8 +205,17 @@ class DispatcherFactory extends Dispatcher
             }
         }
 
-        // 默认：方法名转路径
-        return $prefix . '/' . Str::snake($methodName);
+        // 默认：方法名转路径（驼峰转中划线）
+        return $prefix . '/' . $this->camelToKebab($methodName);
+    }
+
+    /**
+     * 驼峰转中划线
+     * currentUser -> current-user
+     */
+    private function camelToKebab(string $str): string
+    {
+        return strtolower(preg_replace('/([a-z])([A-Z])/', '$1-$2', $str));
     }
 
     /**
