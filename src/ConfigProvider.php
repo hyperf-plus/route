@@ -10,7 +10,7 @@ class ConfigProvider
         return [
             'dependencies' => [
                 // 注册路由收集器
-                RouteCollector::class => RouteCollector::class,
+                \Hyperf\HttpServer\Router\DispatcherFactory::class => DispatcherFactory::class,
             ],
             'annotations' => [
                 'scan' => [
