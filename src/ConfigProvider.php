@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace HPlus\Route;
 
+use Hyperf\HttpServer\Router\DispatcherFactory as HyperfDispatcherFactory;
+
 class ConfigProvider
 {
     public function __invoke(): array
@@ -10,7 +12,7 @@ class ConfigProvider
         return [
             'dependencies' => [
                 // 注册路由收集器
-                \Hyperf\HttpServer\Router\DispatcherFactory::class => DispatcherFactory::class,
+                HyperfDispatcherFactory::class => DispatcherFactory::class,
             ],
             'annotations' => [
                 'scan' => [
