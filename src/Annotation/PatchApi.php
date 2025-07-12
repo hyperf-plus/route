@@ -1,7 +1,6 @@
 <?php
 namespace HPlus\Route\Annotation;
 
-
 use Attribute;
 
 /**
@@ -11,5 +10,28 @@ use Attribute;
 #[Attribute(Attribute::TARGET_METHOD)]
 class PatchApi extends Mapping
 {
-    public array $methods = ['PATCH'];
+    public function __construct(
+        ?string $path = null,
+        ?string $summary = null,
+        ?string $description = null,
+        ?string $deprecated = null,
+        bool $security = true,
+        bool $userOpen = true,
+        array $options = [],
+        ?string $name = null,
+        array $middleware = []
+    ) {
+        parent::__construct(
+            path: $path,
+            summary: $summary,
+            description: $description,
+            deprecated: $deprecated,
+            security: $security,
+            userOpen: $userOpen,
+            methods: ['PATCH'], // 显式设置HTTP方法
+            options: $options,
+            name: $name,
+            middleware: $middleware
+        );
+    }
 }
