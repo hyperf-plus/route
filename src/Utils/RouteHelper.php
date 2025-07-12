@@ -214,7 +214,7 @@ class RouteHelper
         $resourceName = self::pluralize($resourceName);
         
         // 组装完整路径
-        $prefix = '/api';
+        $prefix = '/';
         if (!empty($parts)) {
             $prefix .= '/' . implode('/', array_map('strtolower', $parts));
         }
