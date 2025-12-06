@@ -94,6 +94,9 @@ class DispatcherFactory extends Dispatcher
             ...$this->extendedMappingAnnotations,
         ];
 
+        // 收集路由信息（用于优先级排序）
+        $routesToRegister = [];
+
         foreach ($methodMetadata as $methodName => $values) {
             $options = $annotation->options;
             $methodMiddlewares = $middlewares;
@@ -133,9 +136,24 @@ class DispatcherFactory extends Dispatcher
                         $path = '/' . $path;
                     }
                     
-                    $router->addRoute($mapping->methods, $path, [$className, $methodName], $methodOptions);
+                    // 收集路由信息而不是立即注册
+                    $routesToRegister[] = [
+                        'methods' => $mapping->methods,
+                        'path' => $path,
+                        'handler' => [$className, $methodName],
+                        'options' => $methodOptions,
+                        'priority' => StringHelper::getRoutePriority($path),
+                    ];
                 }
             }
+        }
+
+        // 按优先级排序（静态路由优先）
+        usort($routesToRegister, static fn($a, $b) => $b['priority'] <=> $a['priority']);
+
+        // 按排序后的顺序注册路由
+        foreach ($routesToRegister as $route) {
+            $router->addRoute($route['methods'], $route['path'], $route['handler'], $route['options']);
         }
     }
 
