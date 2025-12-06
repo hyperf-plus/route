@@ -149,13 +149,14 @@ class RouteCollector
         
         $resourceName = StringHelper::camelToKebab($resourceName);
         $resourceName = StringHelper::pluralize($resourceName);
-        
-        $prefix = '/api';
+
+        // 按目录结构生成前缀，不再默认加 /api
+        $prefix = '';
         if (!empty($parts)) {
             $prefix .= '/' . implode('/', array_map('strtolower', $parts));
         }
         $prefix .= '/' . $resourceName;
-        
+
         return $this->normalizePath($prefix);
     }
 
