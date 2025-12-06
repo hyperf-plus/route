@@ -8,8 +8,7 @@ use Attribute;
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
 /**
- * @Annotation
- * @Target({"METHOD"})
+ * 请求体定义注解（OpenAPI RequestBody）
  */
 #[Attribute(Attribute::TARGET_METHOD)]
 class RequestBody extends AbstractAnnotation
@@ -19,6 +18,7 @@ class RequestBody extends AbstractAnnotation
         public bool $required = true,
         public array $content = [],
         public array $examples = [],
-        public ?string $ref = null,
-    ) {}
+        public ?string $ref = null
+    ) {
+    }
 } 

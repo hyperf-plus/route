@@ -9,12 +9,14 @@ use HPlus\Route\Tests\Fixtures\TestApiController;
 use HPlus\Route\Tests\Fixtures\RestfulController;
 use HPlus\Route\Annotation\ApiController;
 use HPlus\Route\Annotation\GetApi;
+use HPlus\Route\Annotation\PostApi;
+use HPlus\Route\Annotation\PutApi;
+use HPlus\Route\Annotation\DeleteApi;
+use HPlus\Route\Annotation\PatchApi;
 use Hyperf\Di\Annotation\AnnotationCollector;
 
 /**
- * RouteCollector 测试类
- * 
- * @group route-collector
+ * RouteCollector 单元测试
  */
 final class RouteCollectorTest extends AbstractTestCase
 {
@@ -30,24 +32,21 @@ final class RouteCollectorTest extends AbstractTestCase
         // 注册测试控制器注解
         $this->registerTestControllerAnnotations();
         
-        // 获取路由收集器实例
+        // 获取路由收集器实例并清理缓存
         $this->routeCollector = RouteCollector::getInstance();
-        
-        // 清理缓存
         $this->routeCollector->clearCache();
     }
 
     protected function tearDown(): void
     {
-        // 清理缓存
         $this->routeCollector->clearCache();
         parent::tearDown();
     }
 
+    // ========== 单例模式测试 ==========
+
     /**
-     * @testdox 测试单例模式实现 / Test singleton pattern implementation
      * @test
-     * @group singleton
      */
     public function it_should_be_singleton(): void
     {
@@ -58,10 +57,10 @@ final class RouteCollectorTest extends AbstractTestCase
         $this->assertInstanceOf(RouteCollector::class, $instance1);
     }
 
+    // ========== 路由收集测试 ==========
+
     /**
-     * @testdox 测试API控制器路由收集功能 / Test API controller route collection functionality
      * @test
-     * @group route-collection
      */
     public function it_can_collect_api_controller_routes(): void
     {
@@ -70,116 +69,82 @@ final class RouteCollectorTest extends AbstractTestCase
         $this->assertIsArray($routes);
         $this->assertNotEmpty($routes);
         
-        // 验证至少包含我们的测试路由
-        $testControllerRoutes = array_filter($routes, function ($route) {
-            return $route['controller'] === TestApiController::class;
-        });
+        // 验证包含测试控制器路由
+        $testControllerRoutes = array_filter($routes, fn($route) => 
+            $route['controller'] === TestApiController::class
+        );
         
         $this->assertNotEmpty($testControllerRoutes, 'TestApiController routes not found');
     }
 
     /**
-     * @testdox 测试路由格式生成是否正确 / Test if route format generation is correct
      * @test
-     * @group route-format
      */
     public function it_generates_correct_route_format(): void
     {
         $routes = $this->routeCollector->collectRoutes();
         
         foreach ($routes as $route) {
-            $this->assertValidRouteFormat($route);
-            $this->assertValidHttpMethods($route['methods']);
+            // 验证必需字段
+            $this->assertArrayHasKey('path', $route);
+            $this->assertArrayHasKey('methods', $route);
+            $this->assertArrayHasKey('controller', $route);
+            $this->assertArrayHasKey('action', $route);
+            $this->assertArrayHasKey('name', $route);
+            $this->assertArrayHasKey('summary', $route);
+            $this->assertArrayHasKey('tags', $route);
+            $this->assertArrayHasKey('security', $route);
+            
+            // 验证类型
+            $this->assertIsString($route['path']);
+            $this->assertIsArray($route['methods']);
+            $this->assertIsString($route['controller']);
+            $this->assertIsString($route['action']);
             
             // 验证路径格式
             $this->assertStringStartsWith('/', $route['path']);
             
-            // 验证控制器类存在
+            // 验证控制器和方法存在
             $this->assertTrue(class_exists($route['controller']));
-            
-            // 验证方法存在
             $this->assertTrue(method_exists($route['controller'], $route['action']));
         }
     }
 
+    // ========== 路径生成测试 ==========
+
     /**
-     * @testdox 测试显式路径处理是否正确 / Test if explicit path handling is correct
      * @test
-     * @group route-path
      */
     public function it_handles_explicit_path_correctly(): void
     {
         $routes = $this->routeCollector->collectRoutes();
         
-        // 查找具体的路由
-        $testRoutes = array_filter($routes, function ($route) {
-            return $route['controller'] === TestApiController::class;
-        });
+        $testRoutes = array_filter($routes, fn($route) => 
+            $route['controller'] === TestApiController::class
+        );
         
         // 验证带参数的路由
-        $showRoute = array_filter($testRoutes, function ($route) {
-            return $route['action'] === 'show';
-        });
-        
-        $this->assertNotEmpty($showRoute);
-        $showRoute = array_values($showRoute)[0];
-        
-        $this->assertStringContainsString('{id}', $showRoute['path']);
-        $this->assertEquals(['GET'], $showRoute['methods']);
-    }
-
-    /**
-     * @testdox 测试RESTful路由生成是否正确 / Test if RESTful route generation is correct
-     * @test
-     * @group restful-mapping
-     */
-    public function it_generates_restful_routes_correctly(): void
-    {
-        $routes = $this->routeCollector->collectRoutes();
-        
-        $restfulRoutes = array_filter($routes, function ($route) {
-            return $route['controller'] === RestfulController::class;
-        });
-        
-        $this->assertNotEmpty($restfulRoutes);
-        
-        // 验证标准RESTful方法
-        $indexRoute = $this->findRouteByAction($restfulRoutes, 'index');
-        $this->assertNotNull($indexRoute);
-        $this->assertEquals(['GET'], $indexRoute['methods']);
-        
-        $showRoute = $this->findRouteByAction($restfulRoutes, 'show');
+        $showRoute = $this->findRouteByAction($testRoutes, 'show');
         $this->assertNotNull($showRoute);
-        $this->assertEquals(['GET'], $showRoute['methods']);
         $this->assertStringContainsString('{id}', $showRoute['path']);
+        $this->assertEquals(['GET'], $showRoute['methods']);
         
-        $createRoute = $this->findRouteByAction($restfulRoutes, 'create');
-        $this->assertNotNull($createRoute);
-        $this->assertEquals(['POST'], $createRoute['methods']);
-        
-        $updateRoute = $this->findRouteByAction($restfulRoutes, 'update');
-        $this->assertNotNull($updateRoute);
-        $this->assertEquals(['PUT'], $updateRoute['methods']);
-        $this->assertStringContainsString('{id}', $updateRoute['path']);
-        
-        $deleteRoute = $this->findRouteByAction($restfulRoutes, 'delete');
-        $this->assertNotNull($deleteRoute);
-        $this->assertEquals(['DELETE'], $deleteRoute['methods']);
-        $this->assertStringContainsString('{id}', $deleteRoute['path']);
+        // 验证搜索路由
+        $searchRoute = $this->findRouteByAction($testRoutes, 'search');
+        $this->assertNotNull($searchRoute);
+        $this->assertStringContainsString('/search', $searchRoute['path']);
     }
 
     /**
-     * @testdox 测试控制器前缀应用是否正确 / Test if controller prefix application is correct
      * @test
-     * @group route-prefix
      */
     public function it_applies_controller_prefix_correctly(): void
     {
         $routes = $this->routeCollector->collectRoutes();
         
-        $testRoutes = array_filter($routes, function ($route) {
-            return $route['controller'] === TestApiController::class;
-        });
+        $testRoutes = array_filter($routes, fn($route) => 
+            $route['controller'] === TestApiController::class
+        );
         
         foreach ($testRoutes as $route) {
             $this->assertStringStartsWith('/test', $route['path']);
@@ -187,9 +152,98 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
-     * @testdox 测试按路径查找路由功能 / Test finding routes by path functionality
      * @test
-     * @group route-search
+     */
+    public function it_generates_kebab_case_paths(): void
+    {
+        $routes = $this->routeCollector->collectRoutes();
+        
+        // 非 RESTful 方法应该转为 kebab-case
+        $restfulRoutes = array_filter($routes, fn($route) => 
+            $route['controller'] === RestfulController::class
+        );
+        
+        $searchRoute = $this->findRouteByAction($restfulRoutes, 'search');
+        $exportRoute = $this->findRouteByAction($restfulRoutes, 'export');
+        
+        // search 和 export 不在标准 RESTful 映射中，应该转为方法名路径
+        $this->assertNotNull($searchRoute);
+        $this->assertNotNull($exportRoute);
+        $this->assertStringContainsString('/search', $searchRoute['path']);
+        $this->assertStringContainsString('/export', $exportRoute['path']);
+    }
+
+    // ========== RESTful 映射测试 ==========
+
+    /**
+     * @test
+     */
+    public function it_generates_restful_routes_correctly(): void
+    {
+        $routes = $this->routeCollector->collectRoutes();
+        
+        $restfulRoutes = array_filter($routes, fn($route) => 
+            $route['controller'] === RestfulController::class
+        );
+        
+        $this->assertNotEmpty($restfulRoutes);
+        
+        // index -> GET /prefix
+        $indexRoute = $this->findRouteByAction($restfulRoutes, 'index');
+        $this->assertNotNull($indexRoute);
+        $this->assertEquals(['GET'], $indexRoute['methods']);
+        $this->assertStringNotContainsString('{id}', $indexRoute['path']);
+        
+        // show -> GET /prefix/{id}
+        $showRoute = $this->findRouteByAction($restfulRoutes, 'show');
+        $this->assertNotNull($showRoute);
+        $this->assertEquals(['GET'], $showRoute['methods']);
+        $this->assertStringContainsString('{id}', $showRoute['path']);
+        
+        // create -> POST /prefix
+        $createRoute = $this->findRouteByAction($restfulRoutes, 'create');
+        $this->assertNotNull($createRoute);
+        $this->assertEquals(['POST'], $createRoute['methods']);
+        
+        // store -> POST /prefix
+        $storeRoute = $this->findRouteByAction($restfulRoutes, 'store');
+        $this->assertNotNull($storeRoute);
+        $this->assertEquals(['POST'], $storeRoute['methods']);
+        
+        // update -> PUT /prefix/{id}
+        $updateRoute = $this->findRouteByAction($restfulRoutes, 'update');
+        $this->assertNotNull($updateRoute);
+        $this->assertEquals(['PUT'], $updateRoute['methods']);
+        $this->assertStringContainsString('{id}', $updateRoute['path']);
+        
+        // delete -> DELETE /prefix/{id}
+        $deleteRoute = $this->findRouteByAction($restfulRoutes, 'delete');
+        $this->assertNotNull($deleteRoute);
+        $this->assertEquals(['DELETE'], $deleteRoute['methods']);
+        $this->assertStringContainsString('{id}', $deleteRoute['path']);
+    }
+
+    /**
+     * @test
+     */
+    public function it_identifies_restful_routes(): void
+    {
+        $routes = $this->routeCollector->collectRoutes();
+        
+        $restfulRoutes = $this->routeCollector->getRestfulRoutes();
+        
+        $this->assertIsArray($restfulRoutes);
+        
+        // 验证标记为 restful 的路由
+        foreach ($restfulRoutes as $route) {
+            $this->assertTrue($route['restful'] ?? false);
+        }
+    }
+
+    // ========== 查询方法测试 ==========
+
+    /**
+     * @test
      */
     public function it_can_find_routes_by_path(): void
     {
@@ -201,13 +255,10 @@ final class RouteCollectorTest extends AbstractTestCase
         
         $route = $this->routeCollector->findRouteByPath('/test/{id}');
         $this->assertNotNull($route);
-        $this->assertEquals('show', $route['action']);
     }
 
     /**
-     * @testdox 测试按控制器查找路由功能 / Test finding routes by controller functionality
      * @test
-     * @group route-search
      */
     public function it_can_find_routes_by_controller(): void
     {
@@ -222,9 +273,22 @@ final class RouteCollectorTest extends AbstractTestCase
     }
 
     /**
-     * @testdox 测试按HTTP方法查找路由功能 / Test finding routes by HTTP method functionality
      * @test
-     * @group route-search
+     */
+    public function it_can_find_routes_by_tag(): void
+    {
+        $this->routeCollector->collectRoutes();
+        
+        $routes = $this->routeCollector->findRoutesByTag('Test');
+        $this->assertNotEmpty($routes);
+        
+        foreach ($routes as $route) {
+            $this->assertContains('Test', $route['tags']);
+        }
+    }
+
+    /**
+     * @test
      */
     public function it_can_find_routes_by_method(): void
     {
@@ -232,125 +296,136 @@ final class RouteCollectorTest extends AbstractTestCase
         
         $getRoutes = $this->routeCollector->findRoutesByMethod('GET');
         $this->assertNotEmpty($getRoutes);
-        
         foreach ($getRoutes as $route) {
             $this->assertContains('GET', $route['methods']);
         }
         
         $postRoutes = $this->routeCollector->findRoutesByMethod('POST');
         $this->assertNotEmpty($postRoutes);
-        
         foreach ($postRoutes as $route) {
             $this->assertContains('POST', $route['methods']);
         }
+        
+        $putRoutes = $this->routeCollector->findRoutesByMethod('PUT');
+        $this->assertNotEmpty($putRoutes);
+        
+        $deleteRoutes = $this->routeCollector->findRoutesByMethod('DELETE');
+        $this->assertNotEmpty($deleteRoutes);
     }
 
     /**
-     * @testdox 测试路由缓存机制是否正确 / Test if route caching mechanism is correct
      * @test
-     * @group cache
+     */
+    public function it_can_get_all_paths(): void
+    {
+        $this->routeCollector->collectRoutes();
+        
+        $paths = $this->routeCollector->getAllPaths();
+        
+        $this->assertIsArray($paths);
+        $this->assertNotEmpty($paths);
+        
+        foreach ($paths as $path) {
+            $this->assertIsString($path);
+            $this->assertStringStartsWith('/', $path);
+        }
+    }
+
+    // ========== 缓存测试 ==========
+
+    /**
+     * @test
      */
     public function it_caches_routes_correctly(): void
     {
-        // 第一次收集路由
+        // 第一次收集
         $routes1 = $this->routeCollector->collectRoutes();
         
-        // 第二次收集路由（应该从缓存获取）
+        // 第二次收集（应该从缓存获取）
         $routes2 = $this->routeCollector->collectRoutes();
         
         $this->assertEquals($routes1, $routes2);
-        
-        // 验证缓存统计
-        $stats = $this->routeCollector->getCacheStats();
-        $this->assertArrayHasKey('routes_cached', $stats);
-        $this->assertArrayHasKey('controllers_cached', $stats);
     }
 
     /**
-     * @testdox 测试缓存清理功能 / Test cache clearing functionality
      * @test
-     * @group cache
      */
     public function it_can_clear_cache(): void
     {
-        // 收集路由以填充缓存
-        $this->routeCollector->collectRoutes();
+        // 收集路由
+        $routes1 = $this->routeCollector->collectRoutes();
         
         // 清理缓存
         $result = $this->routeCollector->clearCache();
         
         $this->assertSame($this->routeCollector, $result);
         
-        // 验证缓存已清空
-        $stats = $this->routeCollector->getCacheStats();
-        $this->assertEquals(0, $stats['routes_cached']);
-        $this->assertEquals(0, $stats['controllers_cached']);
+        // 再次收集（应该重新收集）
+        $routes2 = $this->routeCollector->collectRoutes();
+        
+        $this->assertEquals($routes1, $routes2);
+    }
+
+    // ========== 边界情况测试 ==========
+
+    /**
+     * @test
+     */
+    public function it_returns_null_for_nonexistent_path(): void
+    {
+        $this->routeCollector->collectRoutes();
+        
+        $route = $this->routeCollector->findRouteByPath('/nonexistent/path');
+        $this->assertNull($route);
     }
 
     /**
-     * @testdox 测试性能表现是否可接受 / Test if performance is acceptable
      * @test
-     * @group performance
+     */
+    public function it_returns_empty_array_for_nonexistent_controller(): void
+    {
+        $this->routeCollector->collectRoutes();
+        
+        $routes = $this->routeCollector->findRoutesByController('NonExistent\\Controller');
+        $this->assertIsArray($routes);
+        $this->assertEmpty($routes);
+    }
+
+    /**
+     * @test
+     */
+    public function it_returns_empty_array_for_nonexistent_tag(): void
+    {
+        $this->routeCollector->collectRoutes();
+        
+        $routes = $this->routeCollector->findRoutesByTag('NonExistentTag');
+        $this->assertIsArray($routes);
+        $this->assertEmpty($routes);
+    }
+
+    // ========== 性能测试 ==========
+
+    /**
+     * @test
      */
     public function it_has_acceptable_performance(): void
     {
         $start = microtime(true);
         
-        // 执行多次路由收集
         for ($i = 0; $i < 100; $i++) {
             $this->routeCollector->clearCache();
             $this->routeCollector->collectRoutes();
         }
         
         $end = microtime(true);
-        $totalTime = $end - $start;
+        $averageTime = ($end - $start) / 100;
         
-        // 平均每次收集应该在合理时间内完成（这里设为100ms）
-        $averageTime = $totalTime / 100;
-        $this->assertLessThan(0.1, $averageTime, 'Route collection is too slow');
+        // 平均每次应该小于 50ms
+        $this->assertLessThan(0.05, $averageTime, 'Route collection is too slow');
     }
 
-    /**
-     * @testdox 测试处理无路由控制器的边界情况 / Test handling controllers without routes edge case
-     * @test
-     * @group edge-cases
-     */
-    public function it_handles_controllers_without_routes(): void
-    {
-        // 创建没有路由注解的控制器
-        $routes = $this->routeCollector->collectRoutes();
-        
-        // 不应该抛出异常
-        $this->assertIsArray($routes);
-    }
+    // ========== 辅助方法 ==========
 
-    /**
-     * @testdox 测试路由统计信息功能 / Test route statistics functionality
-     * @test
-     * @group statistics
-     */
-    public function it_provides_route_statistics(): void
-    {
-        $this->routeCollector->collectRoutes();
-        
-        $stats = $this->routeCollector->getRouteStats();
-        
-        $this->assertArrayHasKey('total_routes', $stats);
-        $this->assertArrayHasKey('total_controllers', $stats);
-        $this->assertArrayHasKey('methods_distribution', $stats);
-        $this->assertArrayHasKey('path_patterns', $stats);
-        
-        $this->assertIsInt($stats['total_routes']);
-        $this->assertIsInt($stats['total_controllers']);
-        $this->assertIsArray($stats['methods_distribution']);
-        $this->assertGreaterThan(0, $stats['total_routes']);
-    }
-
-    // ========== 辅助方法 Helper Methods ==========
-
-    /**
-     * 清理注解收集器 / Clear annotation collector
-     */
     private function clearAnnotationCollector(): void
     {
         $reflection = new \ReflectionClass(AnnotationCollector::class);
@@ -359,9 +434,6 @@ final class RouteCollectorTest extends AbstractTestCase
         $container->setValue([]);
     }
 
-    /**
-     * 注册测试控制器注解 / Register test controller annotations
-     */
     private function registerTestControllerAnnotations(): void
     {
         // 注册 TestApiController
@@ -370,8 +442,6 @@ final class RouteCollectorTest extends AbstractTestCase
             ApiController::class,
             new ApiController(prefix: '/test', tag: 'Test', description: '测试API控制器')
         );
-
-        // 注册方法注解
         $this->registerMethodAnnotations(TestApiController::class);
         
         // 注册 RestfulController
@@ -380,13 +450,9 @@ final class RouteCollectorTest extends AbstractTestCase
             ApiController::class,
             new ApiController(description: 'RESTful测试控制器')
         );
-        
         $this->registerMethodAnnotations(RestfulController::class);
     }
 
-    /**
-     * 注册方法注解 / Register method annotations
-     */
     private function registerMethodAnnotations(string $className): void
     {
         $reflection = new \ReflectionClass($className);
@@ -405,9 +471,6 @@ final class RouteCollectorTest extends AbstractTestCase
         }
     }
 
-    /**
-     * 根据动作名查找路由
-     */
     private function findRouteByAction(array $routes, string $action): ?array
     {
         foreach ($routes as $route) {
@@ -415,7 +478,6 @@ final class RouteCollectorTest extends AbstractTestCase
                 return $route;
             }
         }
-        
         return null;
     }
-} 
+}

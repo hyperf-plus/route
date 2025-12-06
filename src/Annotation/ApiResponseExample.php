@@ -4,57 +4,38 @@ declare(strict_types=1);
 
 namespace HPlus\Route\Annotation;
 
+use Attribute;
 use Hyperf\Di\Annotation\AbstractAnnotation;
 
 /**
- * 增强的API响应示例注解 - 支持OpenAPI 3.1.1完整规范
+ * API 响应示例注解 - 支持 OpenAPI 3.1.1 完整规范
  */
-#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class ApiResponseExample extends AbstractAnnotation
 {
-    // 基本信息
-    public ?int $code = null;
-    public ?string $description = null;
-    public ?string $mediaType = 'application/json';
-    
-    // 示例相关 (OpenAPI 3.1+ 增强)
-    public mixed $example = null;
-    public ?array $examples = null;
-    
-    // Schema 定义 (支持 JSON Schema 2020-12)
-    public ?array $schema = null;
-    public ?string $schemaRef = null; // $ref
-    
-    // 响应头
-    public ?array $headers = null;
-    
-    // 链接 (OpenAPI 3.1+ 新增)
-    public ?array $links = null;
-    
-    // 扩展字段
-    public ?array $extensions = null;
-
+    /**
+     * @param int $code HTTP 状态码
+     * @param string $description 响应描述
+     * @param string $mediaType 媒体类型
+     * @param mixed $example 示例值
+     * @param array|null $examples 多个示例（OpenAPI 3.1+）
+     * @param array|null $schema Schema 定义
+     * @param string|null $schemaRef Schema 引用（$ref）
+     * @param array|null $headers 响应头
+     * @param array|null $links 链接（OpenAPI 3.1+）
+     * @param array|null $extensions 扩展字段
+     */
     public function __construct(
-        int $code = 200,
-        string $description = 'Success',
-        string $mediaType = 'application/json',
-        mixed $example = null,
-        ?array $examples = null,
-        ?array $schema = null,
-        ?string $schemaRef = null,
-        ?array $headers = null,
-        ?array $links = null,
-        ?array $extensions = null
+        public int $code = 200,
+        public string $description = 'Success',
+        public string $mediaType = 'application/json',
+        public mixed $example = null,
+        public ?array $examples = null,
+        public ?array $schema = null,
+        public ?string $schemaRef = null,
+        public ?array $headers = null,
+        public ?array $links = null,
+        public ?array $extensions = null
     ) {
-        $this->code = $code;
-        $this->description = $description;
-        $this->mediaType = $mediaType;
-        $this->example = $example;
-        $this->examples = $examples;
-        $this->schema = $schema;
-        $this->schemaRef = $schemaRef;
-        $this->headers = $headers;
-        $this->links = $links;
-        $this->extensions = $extensions;
     }
 } 
