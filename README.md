@@ -235,14 +235,202 @@ composer test
 | 依赖 validate | 软依赖 | 完全独立 |
 | 智能映射规则 | 30+ 条 | 13 条核心 |
 | Hyperf 3.1 | 部分支持 | 完整支持 |
+| 路由优先级 | 无 | 静态路由优先 |
+| PHP 版本 | 8.0+ | 8.1+ |
 
-### 迁移注意
+---
+
+## 🔄 从 3.x 迁移到 4.0
+
+> ⚠️ **重要警告**：4.0 有破坏性变更，不建议老项目直接升级。如确需升级，请仔细阅读以下内容。
+
+### 破坏性变更清单
+
+#### 1. URL 命名风格变更（影响最大）
+
+**3.x**: `snake_case`
+**4.0**: `kebab-case`
+
+```php
+// 控制器类名
+UserProfileController
+
+// 3.x 生成的 URL
+/api/user_profile
+/api/user_profiles
+
+// 4.0 生成的 URL
+/api/user-profile
+/api/user-profiles
+```
+
+**方法名转换**：
+
+```php
+// 3.x
+public function getUserInfo() {}  // → /api/users/get_user_info
+public function batchUpdate() {}  // → /api/users/batch_update
+
+// 4.0
+public function getUserInfo() {}  // → /api/users/get-user-info
+public function batchUpdate() {}  // → /api/users/batch-update
+```
+
+#### 2. RESTful 映射精简
+
+**移除的映射**（4.0 将回退为 kebab-case 路径）：
+
+| 3.x 方法 | 3.x 路径 | 4.0 路径 |
+|---------|---------|---------|
+| `all` | `/` | `/all` |
+| `find` | `/{id}` | `/find` |
+| `first` | `/{id}` | `/first` |
+| `save` | `/` | `/save` |
+| `put` | `/{id}` | `/put` |
+
+**保留的核心映射**：
 
 ```
-# URL 变化示例
-/api/user_profile  →  /api/user-profile
-/api/get_user_info →  /api/get-user-info
+index, list     → GET /
+show, detail    → GET /{id}
+create, store   → POST /
+update, edit    → PUT /{id}
+patch           → PATCH /{id}
+delete, destroy → DELETE /{id}
 ```
+
+#### 3. PHP 版本要求
+
+```diff
+- PHP >= 8.0
++ PHP >= 8.1
+```
+
+#### 4. Hyperf 版本要求
+
+```diff
+- Hyperf >= 3.0
++ Hyperf >= 3.1
+```
+
+#### 5. 注解参数变更
+
+**`deprecated` 类型变更**：
+
+```php
+// 3.x
+#[GetApi(deprecated: true)]  // bool 类型
+
+// 4.0
+#[GetApi(deprecated: true)]  // 仍支持 bool，向后兼容
+```
+
+#### 6. 路由优先级
+
+4.0 新增路由优先级排序，静态路由优先于动态路由注册：
+
+```
+/api/users/export   (优先级 1000，先匹配)
+/api/users/{id}     (优先级 900，后匹配)
+```
+
+### 迁移步骤
+
+#### 步骤 1：检查 PHP 和 Hyperf 版本
+
+```bash
+php -v  # 需要 8.1+
+composer show hyperf/framework  # 需要 3.1+
+```
+
+#### 步骤 2：备份现有路由
+
+```bash
+# 导出当前所有路由
+php bin/hyperf.php route:list > routes_backup.txt
+```
+
+#### 步骤 3：升级依赖
+
+```bash
+composer require hyperf-plus/route:^4.0
+```
+
+#### 步骤 4：修改前端 API 调用
+
+**方案 A：修改前端**（推荐）
+
+```javascript
+// 修改前
+fetch('/api/user_profile')
+fetch('/api/get_user_info')
+
+// 修改后
+fetch('/api/user-profile')
+fetch('/api/get-user-info')
+```
+
+**方案 B：使用显式路径保持兼容**
+
+```php
+// 在注解中显式指定旧路径
+#[ApiController(prefix: '/api/user_profile')]
+class UserProfileController {}
+
+#[GetApi(path: '/get_user_info')]
+public function getUserInfo() {}
+```
+
+#### 步骤 5：检查自定义方法
+
+```php
+// 如果使用了被移除的映射方法名，需要手动指定路径
+// 3.x 自动映射
+#[GetApi]
+public function all() {}  // → GET /api/users
+
+// 4.0 需要显式指定
+#[GetApi(path: '/')]
+public function all() {}  // → GET /api/users
+```
+
+#### 步骤 6：运行测试验证
+
+```bash
+# 启动服务
+php bin/hyperf.php start
+
+# 检查路由是否正确
+curl http://localhost:9501/api/users
+```
+
+### 不迁移建议
+
+如果你的项目满足以下条件，建议**保持 3.x 版本**：
+
+- ✅ 已稳定运行的生产环境
+- ✅ 前端有大量 API 调用
+- ✅ 没有使用 Hyperf 3.1 新特性的需求
+- ✅ 没有 `kebab-case` URL 的强制要求
+
+### 快速兼容方案
+
+如果必须升级但不想改 URL，在 `config/autoload/route.php` 添加：
+
+```php
+// 暂无自动兼容方案，需手动在注解中指定旧路径
+// 或使用 Nginx 重写规则做兼容：
+
+# nginx.conf
+location /api/ {
+    # 将下划线转为中划线
+    if ($request_uri ~* "_") {
+        rewrite ^(.*)_(.*)$ $1-$2 permanent;
+    }
+}
+```
+
+---
 
 ## 📄 License
 
